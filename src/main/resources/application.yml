@@ -1,6 +1,13 @@
 server:
   port: 9000
 
+
+jwt:
+  # 임의의 Base64 인코딩된 비밀키 (실무에선 더 복잡하게 만들어서 숨겨야 함)
+  secret: V2hhdGlzVGhlTW9zdEltcG9ydGFudFRoaW5nSW5MaWZlSXRoaW5rSXIsSGVhbHRoQW5kSGFwcGluZXNz
+  # 토큰 유효 시간 (30분 = 1000 * 60 * 30 밀리초)
+  expiration: 1800000
+
 spring:
   application:
     name: FairTicket
