@@ -15,7 +15,9 @@ import com.fairticket.domain.user.dto.UserResponseDto;
 import com.fairticket.domain.user.service.UserService;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/users")
 @RequiredArgsConstructor
@@ -41,10 +43,8 @@ public class UserController {
     // 내 정보 조회
     @GetMapping("/me")
     public ResponseEntity<UserResponseDto> getMyInfo(Principal principal) {
-//    	// [디버깅용 로그] 토큰에서 꺼낸 이름이 뭔지 찍어보자!
-//        System.out.println("=====================================");
-//        System.out.println("🔑 [Controller] 토큰 속 이메일: " + principal.getName());
-//        System.out.println("=====================================");
+    	// [디버깅용 로그] 토큰에서 꺼낸 이름이 뭔지 찍어보자!
+    	log.debug("🔑 [Controller] 요청한 유저 이메일: {}", principal.getName());
     	
         // principal.getName() 안에는 토큰에서 뽑아낸 "이메일(아이디)"이 들어있음
         UserResponseDto myInfo = userService.getMyInfo(principal.getName());
