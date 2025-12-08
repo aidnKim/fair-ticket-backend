@@ -15,7 +15,9 @@ import com.fairticket.domain.user.repository.UserRepository;
 import com.fairticket.global.jwt.JwtTokenProvider;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 @Transactional(readOnly = true) // 기본적으로 읽기 전용으로 설정 (성능 최적화)
@@ -65,10 +67,8 @@ public class UserService {
      * 내 정보 조회
      */
     public UserResponseDto getMyInfo(String email) {
-//    	// [디버깅용 로그] 서비스에 넘어온 이메일 확인!
-//        System.out.println("=====================================");
-//        System.out.println("🔎 [Service] DB 조회할 이메일: [" + email + "]"); // 대괄호[]로 감싸서 공백 여부 확인
-//        System.out.println("=====================================");
+    	// [디버깅용 로그] 서비스에 넘어온 이메일 확인!
+    	log.debug("🔑 [Controller] 요청한 유저 이메일: {}", email);
     	
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
