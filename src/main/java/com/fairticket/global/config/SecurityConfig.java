@@ -33,9 +33,13 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             
             // 2. 권한 설정 (개발 편의를 위해 일단 모두 허용)
-            // 나중에 기능 완성이 되면, 여기에 .requestMatchers("/admin").hasRole("ADMIN") 등을 추가
             .authorizeHttpRequests(auth -> auth
-                .requestMatchers("/**").permitAll() 
+                    // 1. 회원가입, 로그인은 누구나 접근 가능 (permitAll)
+                    .requestMatchers("/api/v1/users/signup", "/api/v1/users/login").permitAll()
+                    // 2. Swagger 문서 관련 URL도 열어두기 (나중에 쓸 거니까)
+                    .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
+                    // 3. 그 외의 모든 요청은 인증(토큰)이 있어야 함 (authenticated)
+                    .anyRequest().authenticated()
             )
             
             // 3. JWT 필터 끼워넣기 (ID/PW 검사 전에 돌도록)
