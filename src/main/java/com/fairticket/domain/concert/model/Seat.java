@@ -38,7 +38,7 @@ public class Seat {
     @Column(nullable = false, length = 20)
     private SeatStatus status; // AVAILABLE, SOLD
 
-    @Version // ★ 중요: 낙관적 락(Optimistic Lock)을 위한 버전 관리
+    @Version // 낙관적 락(Optimistic Lock)을 위한 버전 관리
     private Long version;
 
     @Builder
