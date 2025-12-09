@@ -1,0 +1,29 @@
+package com.fairticket.domain.concert.dto;
+
+import com.fairticket.domain.concert.model.Concert;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Getter;
+
+import java.time.LocalDateTime;
+
+@Getter
+@Builder
+@AllArgsConstructor
+public class ConcertResponseDto {
+    private Long id;
+    private String title;
+    private String description;
+    private LocalDateTime startDate;
+    private LocalDateTime endDate;
+
+    public static ConcertResponseDto from(Concert concert) {
+        return ConcertResponseDto.builder()
+                .id(concert.getId())
+                .title(concert.getTitle())
+                .description(concert.getDescription())
+                .startDate(concert.getStartDate())
+                .endDate(concert.getEndDate())
+                .build();
+    }
+}
