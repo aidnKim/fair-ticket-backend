@@ -8,7 +8,6 @@ import com.fairticket.domain.concert.model.Seat;
 public interface SeatRepository extends JpaRepository<Seat, Long> {
     // 나중에 비관적 락 적용할 곳 (지금은 비워둠)
 	
-	// 특정 스케줄(scheduleId)에 해당하는 좌석 리스트 조회
-    // 좌석 번호 순서대로 정렬해서 가져오기
+	// 1. 단순 조회용 (락 없음 - 여러 명이 동시에 봐도 됨)
     List<Seat> findByScheduleIdOrderBySeatNoAsc(Long scheduleId);
 }
