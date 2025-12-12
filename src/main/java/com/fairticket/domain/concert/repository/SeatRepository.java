@@ -13,7 +13,7 @@ import jakarta.persistence.LockModeType;
 
 public interface SeatRepository extends JpaRepository<Seat, Long> {
 
-	// 1. 단순 조회용 (락 없음 - 여러 명이 동시에 봐도 됨)
+	// 단순 조회용 (락 없음 - 여러 명이 동시에 봐도 됨)
     List<Seat> findByScheduleIdOrderBySeatNoAsc(Long scheduleId);
     
     // 예약 선점용 (비관적 락 적용)
