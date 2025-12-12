@@ -57,4 +57,12 @@ public class Seat {
         }
         this.status = SeatStatus.TEMPORARY_RESERVED;
     }
+    
+    // 예약(TEMPORARY_RESERVED) -> 판매 완료(SOLD)로 변경
+    public void confirmSold() {
+        if (this.status != SeatStatus.TEMPORARY_RESERVED) {
+            throw new IllegalStateException("예약된 좌석만 판매 확정할 수 있습니다.");
+        }
+        this.status = SeatStatus.SOLD;
+    }
 }
