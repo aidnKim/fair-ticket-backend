@@ -57,7 +57,9 @@ public class Reservation extends BaseTimeEntity {
         this.status = ReservationStatus.PENDING; // 처음 생성할 땐 무조건 '결제 대기'
         this.reservationTime = reservationTime;
         // 결제 기한은 예약 시간으로부터 5분 뒤로 설정 (정책에 따라 변경 가능)
-        this.expireTime = reservationTime.plusMinutes(5);
+//        this.expireTime = reservationTime.plusMinutes(5);
+        //개발용 30초로 설정
+        this.expireTime = reservationTime.plusSeconds(30);
     }
     
     // 결제 성공 시 상태를 PAID로 변경하는 메소드 (나중에 결제 기능에서 사용)

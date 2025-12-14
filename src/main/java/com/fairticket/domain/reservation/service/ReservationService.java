@@ -1,5 +1,11 @@
 package com.fairticket.domain.reservation.service;
 
+import java.time.LocalDateTime;
+import java.util.List;
+
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
 import com.fairticket.domain.concert.model.ConcertSchedule;
 import com.fairticket.domain.concert.model.Seat;
 import com.fairticket.domain.concert.model.SeatStatus;
@@ -7,15 +13,13 @@ import com.fairticket.domain.concert.repository.ConcertScheduleRepository;
 import com.fairticket.domain.concert.repository.SeatRepository;
 import com.fairticket.domain.reservation.dto.ReservationCreateRequestDto;
 import com.fairticket.domain.reservation.model.Reservation;
+import com.fairticket.domain.reservation.model.ReservationStatus;
 import com.fairticket.domain.reservation.repository.ReservationRepository;
 import com.fairticket.domain.user.model.User;
 import com.fairticket.domain.user.repository.UserRepository;
+
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-
-import java.time.LocalDateTime;
 
 @Slf4j
 @Service
@@ -60,5 +64,27 @@ public class ReservationService {
                 .build();
 
         return reservationRepository.save(reservation).getId();
+    }
+    
+    // 만료된 예약 일괄 취소 (스케줄러가 호출)
+    @Transactional
+    public void cancelExpiredReservations() {
+        LocalDateTime now = LocalDateTime.now();
+        
+        // 1. 만료된 예약들 찾기 (PENDING 상태이고, 만료시간이 지난 것)
+        List<Reservation> expiredReservations = reservationRepository.findByStatusAndExpireTimeBefore(ReservationStatus.PENDING, now);
+
+        for (Reservation reservation : expiredReservations) {
+            // 2. 예약 상태 변경 (PENDING -> CANCELLED)
+            reservation.cancel();
+            
+            // 3. 좌석 상태 변경 (TEMPORARY_RESERVED -> AVAILABLE)
+            // 다시 남들이 살 수 있게 풀어줌
+            reservation.getSeat().cancel();
+        }
+        
+        if (!expiredReservations.isEmpty()) {
+            log.info("[Scheduler] 만료된 예약 {}건을 취소했습니다.", expiredReservations.size());
+        }
     }
 }
