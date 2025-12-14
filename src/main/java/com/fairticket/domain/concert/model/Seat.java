@@ -65,4 +65,9 @@ public class Seat {
         }
         this.status = SeatStatus.SOLD;
     }
+    
+    // 예약 취소 시 다시 구매 가능 상태로 변경
+    public void cancel() {
+        this.status = SeatStatus.AVAILABLE;
+    }
 }
