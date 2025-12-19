@@ -53,7 +53,11 @@ public class ReservationService {
 
         // 5. 좌석 상태 변경 (AVAILABLE -> TEMPORARY_RESERVED)
         // Seat 엔티티 안에 만들어둔 reserve() 메소드 사용
-        seat.reserve(); 
+        seat.reserve();
+        
+        // (수정) 변경 사항을 즉시 DB에 반영 (플러시)
+        // Dirty Checking을 기다리지 않고 강제로 Update 쿼리를 날림
+        seatRepository.saveAndFlush(seat);
 
         // 6. 예약 생성 및 저장
         Reservation reservation = Reservation.builder()
