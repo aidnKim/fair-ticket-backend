@@ -34,6 +34,9 @@ public class Concert extends BaseTimeEntity {
 
     @Column(nullable = false)
     private LocalDateTime endDate;
+    
+    @Column(name = "image_url")
+    private String imageUrl;
 
     // 양방향 연관관계 (Concert만 조회해도 스케줄을 알 수 있게)
     // mappedBy = "concert"는 ConcertSchedule 클래스의 concert 변수명을 뜻함
