@@ -16,6 +16,7 @@ public class ConcertResponseDto {
     private String description;
     private LocalDateTime startDate;
     private LocalDateTime endDate;
+    private String imageUrl;
 
     public static ConcertResponseDto from(Concert concert) {
         return ConcertResponseDto.builder()
@@ -24,6 +25,7 @@ public class ConcertResponseDto {
                 .description(concert.getDescription())
                 .startDate(concert.getStartDate())
                 .endDate(concert.getEndDate())
+                .imageUrl(concert.getImageUrl())
                 .build();
     }
 }
