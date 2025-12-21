@@ -2,6 +2,7 @@ package com.fairticket.global.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -12,6 +13,8 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.servlet.config.annotation.CorsRegistry;
+import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import com.fairticket.global.jwt.JwtAuthenticationFilter;
 import com.fairticket.global.jwt.JwtTokenProvider;
@@ -34,11 +37,13 @@ public class SecurityConfig {
             
             // 2. 권한 설정 (개발 편의를 위해 일단 모두 허용)
             .authorizeHttpRequests(auth -> auth
-                    // 1. 회원가입, 로그인은 누구나 접근 가능 (permitAll)
+                    // 회원가입, 로그인은 누구나 접근 가능
                     .requestMatchers("/api/v1/users/signup", "/api/v1/users/login").permitAll()
-                    // 2. Swagger 문서 관련 URL도 열어두기 (나중에 쓸 거니까)
+                    // Swagger 문서 관련 URL도 열어두기
                     .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
-                    // 3. 그 외의 모든 요청은 인증(토큰)이 있어야 함 (authenticated)
+                    // 추가: 공연 조회는 공개
+                    .requestMatchers(HttpMethod.GET, "/api/v1/concerts/**").permitAll()
+                    // 그 외의 모든 요청은 인증(토큰)이 있어야 함 (authenticated)
                     .anyRequest().authenticated()
             )
             
@@ -59,5 +64,15 @@ public class SecurityConfig {
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
+    }
+    
+    @Configuration
+    public class WebConfig implements WebMvcConfigurer {
+        @Override
+        public void addCorsMappings(CorsRegistry registry) {
+            registry.addMapping("/**")
+                    .allowedOrigins("http://localhost:5173") // 리액트 주소 허용
+                    .allowedMethods("GET", "POST", "PUT", "DELETE");
+        }
     }
 }
