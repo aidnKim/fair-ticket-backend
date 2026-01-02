@@ -17,6 +17,9 @@ public class ConcertResponseDto {
     private LocalDateTime startDate;
     private LocalDateTime endDate;
     private String imageUrl;
+    private String venue;
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
 
     public static ConcertResponseDto from(Concert concert) {
         return ConcertResponseDto.builder()
@@ -26,6 +29,9 @@ public class ConcertResponseDto {
                 .startDate(concert.getStartDate())
                 .endDate(concert.getEndDate())
                 .imageUrl(concert.getImageUrl())
+                .venue(concert.getVenue())
+                .createdAt(concert.getCreatedAt())
+                .updatedAt(concert.getUpdatedAt())
                 .build();
     }
 }

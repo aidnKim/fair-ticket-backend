@@ -11,13 +11,40 @@ ON DUPLICATE KEY UPDATE
 
 
 -- 2. 공연 데이터 (메인 페이지용)
--- 이미지 URL은 실제 인터파크나 구글 이미지 주소를 복사해서 넣으세요.
-INSERT INTO concerts (title, description, image_url, start_date, end_date)
+INSERT INTO concerts (title, description, image_url, start_date, end_date, venue, created_at, updated_at)
 VALUES 
-('2025 아이유 콘서트 : H.E.R', '믿고 듣는 아이유의 감동적인 라이브!', 'https://placehold.co/600x800?text=IU+Concert', '2026-05-01', '2026-05-03'),
+(
+	'2025 아이유 콘서트 : H.E.R', 
+	'믿고 듣는 아이유의 감동적인 라이브!', 
+	'https://placehold.co/600x800?text=IU+Concert', 
+	'2026-05-01', '2026-05-03',
+	'서울 KSPO DOME (체조경기장)',
+    NOW(), NOW()
+),
 
-('뮤지컬 <지킬 앤 하이드>', '지금 이 순간, 다시 시작되는 전설', 'https://placehold.co/600x800?text=Jekyll+%26+Hyde', '2026-06-10', '2026-08-20'),
+(
+	'뮤지컬 <지킬 앤 하이드>', 
+	'지금 이 순간, 다시 시작되는 전설', 
+	'https://placehold.co/600x800?text=Jekyll+%26+Hyde', 
+	'2026-06-10', '2026-08-20',
+	'블루스퀘어 신한카드홀',
+    NOW(), NOW()
+),
 
-('싸이 흠뻑쇼 SUMMER SWAG 2025', '미친듯이 놀 준비 되었는가?', 'https://placehold.co/600x800?text=PSY+SUMMER+SWAG', '2026-07-15', '2026-07-15'),
+(
+	'싸이 흠뻑쇼 SUMMER SWAG 2025', 
+	'미친듯이 놀 준비 되었는가?', 
+	'https://placehold.co/600x800?text=PSY+SUMMER+SWAG', 
+	'2026-07-15', '2026-07-15',
+	'잠실 올림픽주경기장',
+    NOW(), NOW()
+),
 
-('태양의서커스 <루치아>', '꿈과 현실을 넘나드는 멕시코의 전설', 'https://placehold.co/600x800?text=Cirque+Luzia', '2026-04-01', '2026-05-30');
+(
+	'태양의서커스 <루치아>', 
+	'꿈과 현실을 넘나드는 멕시코의 전설', 
+	'https://placehold.co/600x800?text=Cirque+Luzia', 
+	'2026-04-01', '2026-05-30',
+	'잠실종합운동장 내 빅탑',
+    NOW(), NOW()
+);
