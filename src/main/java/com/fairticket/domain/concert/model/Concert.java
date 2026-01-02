@@ -35,6 +35,9 @@ public class Concert extends BaseTimeEntity {
     @Column(nullable = false)
     private LocalDateTime endDate;
     
+    @Column(nullable = false, length = 100)
+    private String venue;
+    
     @Column(name = "image_url")
     private String imageUrl;
 
@@ -44,10 +47,13 @@ public class Concert extends BaseTimeEntity {
     private List<ConcertSchedule> schedules = new ArrayList<>();
 
     @Builder
-    public Concert(String title, String description, LocalDateTime startDate, LocalDateTime endDate) {
+    public Concert(String title, String description, LocalDateTime startDate, 
+    			LocalDateTime endDate, String venue, String imageUrl) {
         this.title = title;
         this.description = description;
         this.startDate = startDate;
         this.endDate = endDate;
+        this.venue = venue;
+        this.imageUrl = imageUrl;
     }
 }
