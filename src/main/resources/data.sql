@@ -16,8 +16,8 @@ VALUES
 (
 	'2025-26 엠씨더맥스 이수 콘서트 ‘겨울나기’ - 부산', 
 	'믿고 듣는 이수의 감동적인 라이브!', 
-	'https://ticketimage.interpark.com/TCMS3.0/GMain/Conc/2511/251105113148_25016042.gif', 
-	'https://ticketimage.interpark.com/Play/image/etc/25/25016072-01.jpg',
+	'/images/mcthemax_poster.jpg', 
+	'/images/mcthemax_detail.jpg',
 	'2026-01-17', '2026-01-20',
 	'벡스코 제1전시장 1홀',
     NOW(), NOW()
