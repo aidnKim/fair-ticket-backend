@@ -40,6 +40,9 @@ public class Concert extends BaseTimeEntity {
     
     @Column(name = "image_url")
     private String imageUrl;
+    
+    @Column(name = "detail_image_url", length = 500)
+    private String detailImageUrl;
 
     // 양방향 연관관계 (Concert만 조회해도 스케줄을 알 수 있게)
     // mappedBy = "concert"는 ConcertSchedule 클래스의 concert 변수명을 뜻함
@@ -48,12 +51,13 @@ public class Concert extends BaseTimeEntity {
 
     @Builder
     public Concert(String title, String description, LocalDateTime startDate, 
-    			LocalDateTime endDate, String venue, String imageUrl) {
+    			LocalDateTime endDate, String venue, String imageUrl, String detailImageUrl) {
         this.title = title;
         this.description = description;
         this.startDate = startDate;
         this.endDate = endDate;
         this.venue = venue;
         this.imageUrl = imageUrl;
+        this.detailImageUrl = detailImageUrl;
     }
 }
