@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.fairticket.domain.concert.dto.ConcertCreateRequestDto;
+import com.fairticket.domain.concert.dto.ConcertDetailResponseDto;
 import com.fairticket.domain.concert.dto.ConcertResponseDto;
 import com.fairticket.domain.concert.dto.ScheduleCreateRequestDto;
 import com.fairticket.domain.concert.dto.SeatResponseDto;
@@ -105,5 +106,12 @@ public class ConcertService {
                 .collect(Collectors.toList());
     }
     
+    // 5. 특정 콘서트 세부 내용 조회
+    @Transactional(readOnly = true)
+    public ConcertDetailResponseDto getConcertDetail(Long concertId) {
+        Concert concert = concertRepository.findById(concertId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 공연입니다."));
+        return new ConcertDetailResponseDto(concert);
+    }
     
 }

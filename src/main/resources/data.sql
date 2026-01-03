@@ -3,7 +3,7 @@
 INSERT INTO users (email, password, name, role, point, created_at, updated_at)
 VALUES (
 	'test@test.com', 
-	'$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 
+	'$2a$10$u5Rgkm09P45ULNsJImFym.4Zf0BGQ12i3.I9ncCHULD9DOZz5elc2', 
 	'테스트유저', 'USER', 0, NOW(), NOW())
 ON DUPLICATE KEY UPDATE
   updated_at = NOW();
@@ -52,3 +52,10 @@ VALUES
 	'잠실종합운동장 내 빅탑',
     NOW(), NOW()
 );
+
+-- 3. Schedules (이수 콘서트 1, 2, 3회차)
+INSERT INTO concert_schedules (concert_id, concert_date, total_seats, available_seats, created_at, updated_at)
+VALUES 
+(1, '2026-01-17 19:00:00', 100, 100, NOW(), NOW()),
+(1, '2026-01-18 18:00:00', 100, 100, NOW(), NOW()),
+(1, '2026-01-19 17:00:00', 100, 100, NOW(), NOW());

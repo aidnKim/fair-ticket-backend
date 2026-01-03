@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fairticket.domain.concert.dto.ConcertCreateRequestDto;
+import com.fairticket.domain.concert.dto.ConcertDetailResponseDto;
 import com.fairticket.domain.concert.dto.ConcertResponseDto;
 import com.fairticket.domain.concert.dto.ScheduleCreateRequestDto;
 import com.fairticket.domain.concert.dto.SeatResponseDto;
@@ -50,5 +51,11 @@ public class ConcertController {
     @GetMapping("/{scheduleId}/seats")
     public ResponseEntity<List<SeatResponseDto>> getSeats(@PathVariable Long scheduleId) {
         return ResponseEntity.ok(concertService.getSeats(scheduleId));
+    }
+    
+    // [사용자] 특정 콘서트 세부 내용 조회
+    @GetMapping("/{concertId}")
+    public ResponseEntity<ConcertDetailResponseDto> getConcertDetail(@PathVariable Long concertId) {
+        return ResponseEntity.ok(concertService.getConcertDetail(concertId));
     }
 }
