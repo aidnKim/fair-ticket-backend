@@ -18,6 +18,7 @@ import com.fairticket.domain.concert.model.ConcertSchedule;
 import com.fairticket.domain.concert.model.Seat;
 import com.fairticket.domain.concert.model.SeatGrade;
 import com.fairticket.domain.concert.model.SeatStatus;
+import com.fairticket.domain.concert.model.Venue;
 import com.fairticket.domain.concert.repository.ConcertRepository;
 import com.fairticket.domain.concert.repository.ConcertScheduleRepository;
 import com.fairticket.domain.concert.repository.SeatRepository;
@@ -60,33 +61,32 @@ public class ConcertService {
         
         scheduleRepository.save(schedule);
 
-        // 좌석 자동 생성 로직 (MVP용 단순화)
-        // 1~10번: VIP, 11~20번: R, 나머지: S 등급으로 자동 배정
-        List<Seat> seats = new ArrayList<>();
-        for (int i = 1; i <= requestDto.getTotalSeats(); i++) {
-            SeatGrade grade = SeatGrade.S; // 기본 S
-            BigDecimal price = new BigDecimal(50000); // 기본 5만원
-
-            if (i <= 10) {
-                grade = SeatGrade.VIP;
-                price = new BigDecimal(150000);
-            } else if (i <= 20) {
-                grade = SeatGrade.R;
-                price = new BigDecimal(100000);
+        // 좌석 자동 생성 로직
+        Venue venue = concert.getVenue();
+        if (venue != null) {
+            List<Seat> seats = new ArrayList<>();
+            
+            for (int rowIdx = 0; rowIdx < venue.getTotalRows(); rowIdx++) {
+                String row = String.valueOf((char) ('A' + rowIdx));
+                
+                for (int col = 1; col <= venue.getSeatsPerRow(); col++) {
+                    SeatGrade grade = venue.isVipRow(row) ? SeatGrade.VIP : SeatGrade.R;
+                    BigDecimal price = (grade == SeatGrade.VIP) 
+                        ? new BigDecimal("150000") 
+                        : new BigDecimal("120000");
+                    Seat seat = Seat.builder()
+                            .schedule(schedule)
+                            .seatRow(row)
+                            .seatCol(col)
+                            .grade(grade)
+                            .price(price)
+                            .status(SeatStatus.AVAILABLE)
+                            .build();
+                    seats.add(seat);
+                }
             }
-
-            Seat seat = Seat.builder()
-                    .schedule(schedule)
-                    .seatNo(i)
-                    .grade(grade)
-                    .price(price)
-                    .status(SeatStatus.AVAILABLE) // 초기 상태는 '구매 가능'
-                    .build();
-            seats.add(seat);
+            seatRepository.saveAll(seats);
         }
-
-        seatRepository.saveAll(seats); // 한 번에 저장 (Bulk Insert)
-
         return schedule.getId();
     }
     
@@ -101,7 +101,7 @@ public class ConcertService {
     // 4. 특정 스케줄의 좌석 조회
     @Transactional(readOnly = true)
     public List<SeatResponseDto> getSeats(Long scheduleId) {
-        return seatRepository.findByScheduleIdOrderBySeatNoAsc(scheduleId).stream()
+        return seatRepository.findByScheduleIdOrderBySeatRowAscSeatColAsc(scheduleId).stream()
                 .map(SeatResponseDto::from)
                 .collect(Collectors.toList());
     }

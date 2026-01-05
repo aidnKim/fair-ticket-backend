@@ -14,7 +14,9 @@ import java.math.BigDecimal;
 @AllArgsConstructor
 public class SeatResponseDto {
     private Long seatId;
-    private int seatNo;
+    private String seatRow;
+    private int seatCol;
+    private String seatLabel;  // "A열 3번" (화면 표시용)
     private SeatGrade grade;
     private BigDecimal price;
     private SeatStatus status; // 판매됨(SOLD)인지 예약가능(AVAILABLE)인지 중요!
@@ -22,7 +24,9 @@ public class SeatResponseDto {
     public static SeatResponseDto from(Seat seat) {
         return SeatResponseDto.builder()
                 .seatId(seat.getId())
-                .seatNo(seat.getSeatNo())
+                .seatRow(seat.getSeatRow())
+                .seatCol(seat.getSeatCol())
+                .seatLabel(seat.getSeatRow() + "열 " + seat.getSeatCol() + "번")
                 .grade(seat.getGrade())
                 .price(seat.getPrice())
                 .status(seat.getStatus())

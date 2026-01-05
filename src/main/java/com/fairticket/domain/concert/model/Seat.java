@@ -24,8 +24,11 @@ public class Seat {
     @JoinColumn(name = "schedule_id", nullable = false)
     private ConcertSchedule schedule;
 
+    @Column(nullable = false, length = 10)
+    private String seatRow;  // "A", "B", "C"
+    
     @Column(nullable = false)
-    private int seatNo; // 좌석 번호 (1, 2, 3...)
+    private int seatCol;  // 1, 2, 3...
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
@@ -42,9 +45,10 @@ public class Seat {
     private Long version;
 
     @Builder
-    public Seat(ConcertSchedule schedule, int seatNo, SeatGrade grade, BigDecimal price, SeatStatus status) {
+    public Seat(ConcertSchedule schedule, String seatRow, int seatCol, SeatGrade grade, BigDecimal price, SeatStatus status) {
         this.schedule = schedule;
-        this.seatNo = seatNo;
+        this.seatRow = seatRow;
+        this.seatCol = seatCol;
         this.grade = grade;
         this.price = price;
         this.status = status;

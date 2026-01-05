@@ -1,3 +1,10 @@
+-- 0. 공연장 데이터
+INSERT INTO venues (name, total_rows, seats_per_row, vip_rows) VALUES
+('벡스코 제1전시장 1홀', 5, 10, 'A,B'),
+('블루스퀘어 신한카드홀', 4, 8, 'A'),
+('잠실 올림픽주경기장', 6, 15, 'A,B,C'),
+('잠실종합운동장 내 빅탑', 5, 12, 'A,B');
+
 -- 1. 유저 데이터 (로그인 테스트용)
 -- password는 BCrypt로 '1234'를 암호화한 문자열
 INSERT INTO users (email, password, name, role, point, created_at, updated_at)
@@ -11,7 +18,7 @@ ON DUPLICATE KEY UPDATE
 
 
 -- 2. 공연 데이터 (메인 페이지용)
-INSERT INTO concerts (title, description, image_url, detail_image_url, start_date, end_date, venue, created_at, updated_at)
+INSERT INTO concerts (title, description, image_url, detail_image_url, start_date, end_date, venue_id, created_at, updated_at)
 VALUES 
 (
 	'2025-26 엠씨더맥스 이수 콘서트 ‘겨울나기’ - 부산', 
@@ -19,7 +26,7 @@ VALUES
 	'/images/mcthemax_poster.jpg', 
 	'/images/mcthemax_detail.jpg',
 	'2026-01-17', '2026-01-20',
-	'벡스코 제1전시장 1홀',
+	1,
     NOW(), NOW()
 ),
 
@@ -29,7 +36,7 @@ VALUES
 	'https://placehold.co/600x800?text=Jekyll+%26+Hyde', 
 	null,
 	'2026-06-10', '2026-08-20',
-	'블루스퀘어 신한카드홀',
+	2,
     NOW(), NOW()
 ),
 
@@ -39,7 +46,7 @@ VALUES
 	'https://placehold.co/600x800?text=PSY+SUMMER+SWAG', 
 	null,
 	'2026-07-15', '2026-07-15',
-	'잠실 올림픽주경기장',
+	3,
     NOW(), NOW()
 ),
 
@@ -49,7 +56,7 @@ VALUES
 	'https://placehold.co/600x800?text=Cirque+Luzia', 
 	null,
 	'2026-04-01', '2026-05-30',
-	'잠실종합운동장 내 빅탑',
+	4,
     NOW(), NOW()
 );
 
