@@ -23,7 +23,7 @@ public class ConcertDetailResponseDto {
         this.id = concert.getId();
         this.title = concert.getTitle();
         this.description = concert.getDescription();
-        this.venue = concert.getVenue();
+        this.venue = concert.getVenue() != null ? concert.getVenue().getName() : null;
         this.imageUrl = concert.getImageUrl();
         this.detailImageUrl = concert.getDetailImageUrl();
         this.startDate = concert.getStartDate();

@@ -29,7 +29,7 @@ public class ConcertResponseDto {
                 .startDate(concert.getStartDate())
                 .endDate(concert.getEndDate())
                 .imageUrl(concert.getImageUrl())
-                .venue(concert.getVenue())
+                .venue(concert.getVenue() != null ? concert.getVenue().getName() : null)
                 .createdAt(concert.getCreatedAt())
                 .updatedAt(concert.getUpdatedAt())
                 .build();
