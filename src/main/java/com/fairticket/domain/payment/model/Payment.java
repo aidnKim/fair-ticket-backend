@@ -1,6 +1,7 @@
 package com.fairticket.domain.payment.model;
 
 import com.fairticket.domain.reservation.model.Reservation;
+import com.fairticket.domain.reservation.model.ReservationStatus;
 import com.fairticket.domain.user.model.User;
 import com.fairticket.global.common.BaseTimeEntity;
 import jakarta.persistence.*;
@@ -37,12 +38,25 @@ public class Payment extends BaseTimeEntity {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private PaymentStatus status;
+    
+    @Column(name = "imp_uid")
+    private String impUid;        // 포트원 거래 고유번호
+    
+    @Column(name = "merchant_uid")
+    private String merchantUid;   // 주문번호
 
     @Builder
-    public Payment(Reservation reservation, User user, BigDecimal amount, PaymentStatus status) {
+    public Payment(Reservation reservation, User user, BigDecimal amount, PaymentStatus status, String impUid, String merchantUid) {
         this.reservation = reservation;
         this.user = user;
         this.amount = amount;
         this.status = status;
+        this.impUid = impUid;
+        this.merchantUid = merchantUid;
+    }
+    
+    // 취소 처리 메소드
+    public void cancel() {
+        this.status = PaymentStatus.REFUNDED;
     }
 }
