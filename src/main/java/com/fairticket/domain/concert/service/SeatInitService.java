@@ -32,8 +32,8 @@ public class SeatInitService {
             for (int col = 1; col <= venue.getSeatsPerRow(); col++) {
                 SeatGrade grade = venue.isVipRow(row) ? SeatGrade.VIP : SeatGrade.R;
                 BigDecimal price = (grade == SeatGrade.VIP) 
-                    ? new BigDecimal("150000") 
-                    : new BigDecimal("120000");
+                    ? new BigDecimal("100") 
+                    : new BigDecimal("100");
 
                 Seat seat = Seat.builder()
                         .schedule(schedule)
