@@ -20,9 +20,9 @@ public class ReservationController {
 
     // 좌석 예약 (선점)
     @PostMapping
-    public ResponseEntity<String> createReservation(Principal principal,
+    public ResponseEntity<Long> createReservation(Principal principal,
                                                     @RequestBody ReservationCreateRequestDto requestDto) {
         Long reservationId = reservationService.createReservation(principal.getName(), requestDto);
-        return ResponseEntity.ok("좌석 예약을 성공했습니다! (임시 점유) ID: " + reservationId);
+        return ResponseEntity.ok(reservationId);
     }
 }
