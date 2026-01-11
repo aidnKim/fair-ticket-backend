@@ -34,6 +34,8 @@ public class PortOneService {
      * 1. 액세스 토큰 발급
      */
     public String getAccessToken() {
+//    	System.out.println("🔑 API KEY: " + apiKey);
+//        System.out.println("🔑 API SECRET: " + apiSecret);
         String url = PORTONE_API_URL + "/users/getToken";
 
         Map<String, String> body = Map.of(

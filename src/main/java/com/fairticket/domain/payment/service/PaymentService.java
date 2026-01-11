@@ -11,12 +11,14 @@ import com.fairticket.domain.reservation.repository.ReservationRepository;
 import com.fairticket.domain.user.model.User;
 import com.fairticket.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class PaymentService {
@@ -29,57 +31,69 @@ public class PaymentService {
     //결제 처리
     @Transactional
     public Long processPayment(String email, PaymentCreateRequestDto requestDto) {
-        // 1. 유저 확인
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
+        try {
+            // 1. 유저 확인
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
 
-        // 2. 예약 정보 확인
-        Reservation reservation = reservationRepository.findById(requestDto.getReservationId())
-                .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다."));
+            // 2. 예약 정보 확인
+            Reservation reservation = reservationRepository.findById(requestDto.getReservationId())
+                    .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다."));
 
-        // 3. 본인 예약인지 검증
-        if (!reservation.getUser().getId().equals(user.getId())) {
-            throw new IllegalArgumentException("본인의 예약만 결제할 수 있습니다.");
+            // 3. 본인 예약인지 검증
+            if (!reservation.getUser().getId().equals(user.getId())) {
+                throw new IllegalArgumentException("본인의 예약만 결제할 수 있습니다.");
+            }
+
+            // 4. 포트원 결제 검증
+            PortOnePaymentResponseDto portOneData = portOneService.getPaymentInfo(requestDto.getImpUid());
+            
+            // 검증 1: 결제 상태
+            if (!"paid".equals(portOneData.getStatus())) {
+                throw new IllegalArgumentException("결제가 완료되지 않았습니다.");
+            }
+            // 검증 2: 결제 금액
+            if (portOneData.getAmount().compareTo(reservation.getSeat().getPrice()) != 0) {
+                throw new IllegalArgumentException("결제 금액이 일치하지 않습니다.");
+            }
+            // 검증 3: 주문번호
+            if (!requestDto.getMerchantUid().equals(portOneData.getMerchantUid())) {
+                throw new IllegalArgumentException("주문번호가 일치하지 않습니다.");
+            }
+
+            // 5. [핵심 로직] 상태 변경
+            // 1) 예약 상태: PENDING -> PAID
+            reservation.completePayment();
+            
+            // 2) 좌석 상태: TEMPORARY_RESERVED -> SOLD
+            reservation.getSeat().confirmSold();
+
+            // 6. 결제 이력 저장
+            Payment payment = Payment.builder()
+                    .user(user)
+                    .reservation(reservation)
+                    .amount(portOneData.getAmount())
+                    .status(PaymentStatus.COMPLETED)
+                    .impUid(requestDto.getImpUid())
+                    .merchantUid(requestDto.getMerchantUid())
+                    .build();
+
+            return paymentRepository.save(payment).getId();
+            
+        } catch (Exception e) {
+            // 어떤 예외든 발생하면 포트원 결제 취소 시도
+            try {
+                if (requestDto.getImpUid() != null) {
+                    portOneService.cancelPayment(requestDto.getImpUid(), "서버 오류: " + e.getMessage());
+                }
+            } catch (Exception cancelEx) {
+                // 취소도 실패하면 로그 기록 (수동 처리 필요)
+                log.error("❌ 결제 자동 취소 실패! impUid: {}, 원인: {}", 
+                          requestDto.getImpUid(), cancelEx.getMessage());
+            }
+            // 원래 예외 다시 던지기
+            throw e;
         }
-
-        // 4. 포트원 결제 검증
-        PortOnePaymentResponseDto portOneData = portOneService.getPaymentInfo(requestDto.getImpUid());
-        // 검증 1: 결제 상태
-        if (!"paid".equals(portOneData.getStatus())) {
-            throw new IllegalArgumentException("결제가 완료되지 않았습니다.");
-        }
-        // 검증 2: 결제 금액
-        if (portOneData.getAmount().compareTo(reservation.getSeat().getPrice()) != 0) {
-        	// 금액 불일치 → 바로 취소!
-            portOneService.cancelPayment(requestDto.getImpUid(), "결제 금액 불일치");
-            throw new IllegalArgumentException("결제 금액이 일치하지 않습니다. 자동 환불되었습니다.");
-        }
-        // 검증 3: 주문번호
-        if (!requestDto.getMerchantUid().equals(portOneData.getMerchantUid())) {
-        	// 주문번호 불일치 → 바로 취소!
-            portOneService.cancelPayment(requestDto.getImpUid(), "주문번호 불일치");
-            throw new IllegalArgumentException("주문번호가 일치하지 않습니다. 자동 환불되었습니다.");
-        }
-        // ----------------------------------------------------
-        // [핵심 로직] 상태 변경
-        // 1) 예약 상태: PENDING -> PAID
-        reservation.completePayment();
-        
-        // 2) 좌석 상태: TEMPORARY_RESERVED -> SOLD
-        reservation.getSeat().confirmSold();
-        // ----------------------------------------------------
-
-        // 5. 결제 이력 저장
-        Payment payment = Payment.builder()
-                .user(user)
-                .reservation(reservation)
-                .amount(portOneData.getAmount())
-                .status(PaymentStatus.COMPLETED)
-                .impUid(requestDto.getImpUid())
-                .merchantUid(requestDto.getMerchantUid())
-                .build();
-
-        return paymentRepository.save(payment).getId();
     }
     
     //주문번호 생성
