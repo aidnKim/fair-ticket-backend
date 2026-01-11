@@ -19,6 +19,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 import com.fairticket.global.jwt.JwtAuthenticationFilter;
 import com.fairticket.global.jwt.JwtTokenProvider;
 
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 
 @Configuration
@@ -45,6 +46,14 @@ public class SecurityConfig {
                     .requestMatchers(HttpMethod.GET, "/api/v1/concerts/**").permitAll()
                     // 그 외의 모든 요청은 인증(토큰)이 있어야 함 (authenticated)
                     .anyRequest().authenticated()
+            )
+            // 인증 실패 시 401 반환
+            .exceptionHandling(ex -> ex
+                .authenticationEntryPoint((request, response, authException) -> {
+                    response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+                    response.setContentType("application/json;charset=UTF-8");
+                    response.getWriter().write("{\"error\": \"인증이 필요합니다.\"}");
+                })
             )
             
             // 3. JWT 필터 끼워넣기 (ID/PW 검사 전에 돌도록)
