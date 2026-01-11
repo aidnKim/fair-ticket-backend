@@ -50,11 +50,15 @@ public class PaymentService {
         }
         // 검증 2: 결제 금액
         if (portOneData.getAmount().compareTo(reservation.getSeat().getPrice()) != 0) {
-            throw new IllegalArgumentException("결제 금액이 일치하지 않습니다.");
+        	// 금액 불일치 → 바로 취소!
+            portOneService.cancelPayment(requestDto.getImpUid(), "결제 금액 불일치");
+            throw new IllegalArgumentException("결제 금액이 일치하지 않습니다. 자동 환불되었습니다.");
         }
         // 검증 3: 주문번호
         if (!requestDto.getMerchantUid().equals(portOneData.getMerchantUid())) {
-            throw new IllegalArgumentException("주문번호가 일치하지 않습니다.");
+        	// 주문번호 불일치 → 바로 취소!
+            portOneService.cancelPayment(requestDto.getImpUid(), "주문번호 불일치");
+            throw new IllegalArgumentException("주문번호가 일치하지 않습니다. 자동 환불되었습니다.");
         }
         // ----------------------------------------------------
         // [핵심 로직] 상태 변경
