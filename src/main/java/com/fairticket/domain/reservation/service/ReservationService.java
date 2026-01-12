@@ -12,6 +12,7 @@ import com.fairticket.domain.concert.model.SeatStatus;
 import com.fairticket.domain.concert.repository.ConcertScheduleRepository;
 import com.fairticket.domain.concert.repository.SeatRepository;
 import com.fairticket.domain.reservation.dto.ReservationCreateRequestDto;
+import com.fairticket.domain.reservation.dto.ReservationResponseDto;
 import com.fairticket.domain.reservation.model.Reservation;
 import com.fairticket.domain.reservation.model.ReservationStatus;
 import com.fairticket.domain.reservation.repository.ReservationRepository;
@@ -90,5 +91,15 @@ public class ReservationService {
         if (!expiredReservations.isEmpty()) {
             log.info("[Scheduler] 만료된 예약 {}건을 취소했습니다.", expiredReservations.size());
         }
+    }
+    
+    // 회원 별 예약 내역 조회
+    @Transactional(readOnly = true)
+    public List<ReservationResponseDto> getMyReservations(String email) {
+        List<Reservation> reservations = reservationRepository.findByUserEmailOrderByReservationTimeDesc(email);
+        
+        return reservations.stream()
+            .map(ReservationResponseDto::from)
+            .toList();
     }
 }
