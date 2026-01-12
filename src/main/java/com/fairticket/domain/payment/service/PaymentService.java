@@ -7,6 +7,7 @@ import com.fairticket.domain.payment.model.Payment;
 import com.fairticket.domain.payment.model.PaymentStatus;
 import com.fairticket.domain.payment.repository.PaymentRepository;
 import com.fairticket.domain.reservation.model.Reservation;
+import com.fairticket.domain.reservation.model.ReservationStatus;
 import com.fairticket.domain.reservation.repository.ReservationRepository;
 import com.fairticket.domain.user.model.User;
 import com.fairticket.domain.user.repository.UserRepository;
@@ -39,6 +40,10 @@ public class PaymentService {
             // 2. 예약 정보 확인
             Reservation reservation = reservationRepository.findById(requestDto.getReservationId())
                     .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다."));
+            // 예약 상태 검증
+            if (reservation.getStatus() != ReservationStatus.PENDING) {
+                throw new IllegalArgumentException("이미 처리되었거나 만료된 예약입니다.");
+            }
 
             // 3. 본인 예약인지 검증
             if (!reservation.getUser().getId().equals(user.getId())) {
@@ -106,6 +111,10 @@ public class PaymentService {
         // 2. 예약 정보 확인
         Reservation reservation = reservationRepository.findById(reservationId)
                 .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다."));
+        // 예약 상태 검증
+        if (reservation.getStatus() != ReservationStatus.PENDING) {
+            throw new IllegalArgumentException("이미 처리되었거나 만료된 예약입니다.");
+        }
 
         // 3. 본인 예약인지 검증
         if (!reservation.getUser().getId().equals(user.getId())) {

@@ -1,6 +1,7 @@
 package com.fairticket.domain.reservation.dto;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 
 import com.fairticket.domain.reservation.model.Reservation;
@@ -19,6 +20,7 @@ public class ReservationResponseDto {
     private String seatNum;         // 좌석 번호 (예: "A열 3번")
     private String status;          // PENDING, PAID, CANCELLED
     private BigDecimal price;              // 가격
+    private LocalDateTime expireTime;  // 만료 시간
 
     public static ReservationResponseDto from(Reservation reservation) {
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
@@ -33,6 +35,7 @@ public class ReservationResponseDto {
                 .seatNum(reservation.getSeat().getSeatRow() + "열 " + reservation.getSeat().getSeatCol() + "번")
                 .status(reservation.getStatus().name())
                 .price(reservation.getSeat().getPrice())
+                .expireTime(reservation.getExpireTime())
                 .build();
     }
 }
