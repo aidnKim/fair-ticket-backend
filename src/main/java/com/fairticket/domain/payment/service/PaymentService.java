@@ -161,5 +161,8 @@ public class PaymentService {
 
         // 4. 좌석 상태 변경 (SOLD -> AVAILABLE)
         payment.getReservation().getSeat().cancel();
+        
+        // 5. 잔여 좌석 증가
+        payment.getReservation().getSchedule().increaseAvailableSeats();
     }
 }
