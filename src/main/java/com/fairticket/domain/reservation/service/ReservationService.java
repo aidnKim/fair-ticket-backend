@@ -11,6 +11,9 @@ import com.fairticket.domain.concert.model.Seat;
 import com.fairticket.domain.concert.model.SeatStatus;
 import com.fairticket.domain.concert.repository.ConcertScheduleRepository;
 import com.fairticket.domain.concert.repository.SeatRepository;
+import com.fairticket.domain.payment.model.Payment;
+import com.fairticket.domain.payment.repository.PaymentRepository;
+import com.fairticket.domain.payment.service.PaymentService;
 import com.fairticket.domain.reservation.dto.ReservationCreateRequestDto;
 import com.fairticket.domain.reservation.dto.ReservationResponseDto;
 import com.fairticket.domain.reservation.model.Reservation;
@@ -31,6 +34,8 @@ public class ReservationService {
     private final SeatRepository seatRepository;
     private final ConcertScheduleRepository scheduleRepository;
     private final UserRepository userRepository;
+    private final PaymentRepository paymentRepository;
+    private final PaymentService paymentService;
 
     @Transactional
     public Long createReservation(String email, ReservationCreateRequestDto requestDto) {
@@ -101,5 +106,15 @@ public class ReservationService {
         return reservations.stream()
             .map(ReservationResponseDto::from)
             .toList();
+    }
+    
+    // 예매 취소 (reservationId로)
+    @Transactional
+    public void cancelReservation(String email, Long reservationId) {
+        // reservationId로 payment 찾기
+        Payment payment = paymentRepository.findByReservationId(reservationId)
+                .orElseThrow(() -> new IllegalArgumentException("결제 정보를 찾을 수 없습니다."));
+
+        paymentService.cancelPayment(email, payment.getId());
     }
 }

@@ -4,7 +4,9 @@ import java.security.Principal;
 import java.util.List;
 
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -36,5 +38,13 @@ public class ReservationController {
     public ResponseEntity<List<ReservationResponseDto>> getMyReservations(Principal principal) {
     	List<ReservationResponseDto> reservations = reservationService.getMyReservations(principal.getName());
         return ResponseEntity.ok(reservations);
+    }
+    
+    // 예매 취소
+    @DeleteMapping("/{reservationId}")
+    public ResponseEntity<String> cancelReservation(Principal principal,
+                                                     @PathVariable Long reservationId) {
+        reservationService.cancelReservation(principal.getName(), reservationId);
+        return ResponseEntity.ok("예매가 취소되었습니다.");
     }
 }
