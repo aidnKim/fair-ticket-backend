@@ -64,8 +64,11 @@ public class ReservationService {
         // (수정) 변경 사항을 즉시 DB에 반영 (플러시)
         // Dirty Checking을 기다리지 않고 강제로 Update 쿼리를 날림
         seatRepository.saveAndFlush(seat);
+        
+        // 6. 잔여 좌석 감소
+        schedule.decreaseAvailableSeats();
 
-        // 6. 예약 생성 및 저장
+        // 7. 예약 생성 및 저장
         Reservation reservation = Reservation.builder()
                 .user(user)
                 .seat(seat)
@@ -91,6 +94,9 @@ public class ReservationService {
             // 3. 좌석 상태 변경 (TEMPORARY_RESERVED -> AVAILABLE)
             // 다시 남들이 살 수 있게 풀어줌
             reservation.getSeat().cancel();
+            
+            // 잔여 좌석 증가
+            reservation.getSchedule().increaseAvailableSeats();
         }
         
         if (!expiredReservations.isEmpty()) {

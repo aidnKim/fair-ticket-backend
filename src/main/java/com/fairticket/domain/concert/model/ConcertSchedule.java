@@ -5,11 +5,13 @@ import lombok.AccessLevel;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.time.LocalDateTime;
 
 import com.fairticket.global.common.BaseTimeEntity;
 
+@Slf4j
 @Entity
 @Getter
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
@@ -45,9 +47,21 @@ public class ConcertSchedule extends BaseTimeEntity {
     
     // 예매 시 잔여 좌석 감소 로직
     public void decreaseAvailableSeats() {
-        if (this.availableSeats <= 0) {
-            throw new IllegalStateException("잔여 좌석이 없습니다.");
+    	if (this.availableSeats <= 0) {
+            log.warn("availableSeats 불일치 감지! scheduleId={}", this.id);
+            return;  // 예약은 막지 않음
         }
         this.availableSeats--;
+    }
+    
+    // 예매 취소 시 잔여 좌석 증가 로직
+    public void increaseAvailableSeats() {
+    	if (this.availableSeats >= this.totalSeats) {
+            // 로그만 남기고 넘어감 (취소는 막지 않음)
+            log.warn("잔여좌석이 이미 최대입니다. scheduleId={}, availableSeats={}, totalSeats={}", 
+                     this.id, this.availableSeats, this.totalSeats);
+            return;
+        }
+        this.availableSeats++;
     }
 }
