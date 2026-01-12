@@ -96,6 +96,42 @@ public class PaymentService {
         }
     }
     
+    // 테스트 결제 (포트원 없이)
+    @Transactional
+    public Long processTestPayment(String email, Long reservationId) {
+        // 1. 유저 확인
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
+
+        // 2. 예약 정보 확인
+        Reservation reservation = reservationRepository.findById(reservationId)
+                .orElseThrow(() -> new IllegalArgumentException("예약을 찾을 수 없습니다."));
+
+        // 3. 본인 예약인지 검증
+        if (!reservation.getUser().getId().equals(user.getId())) {
+            throw new IllegalArgumentException("본인의 예약만 결제할 수 있습니다.");
+        }
+
+        // 4. 포트원 검증 스킵! 바로 상태 변경
+        // 예약 상태: PENDING -> PAID
+        reservation.completePayment();
+        
+        // 좌석 상태: TEMPORARY_RESERVED -> SOLD
+        reservation.getSeat().confirmSold();
+
+        // 5. 테스트 결제 기록 생성
+        Payment payment = Payment.builder()
+                .user(user)
+                .reservation(reservation)
+                .amount(reservation.getSeat().getPrice())
+                .status(PaymentStatus.COMPLETED)
+                .impUid("TEST_" + System.currentTimeMillis())
+                .merchantUid("ORD-TEST-" + System.currentTimeMillis())
+                .build();
+
+        return paymentRepository.save(payment).getId();
+    }
+    
     //주문번호 생성
     public String createOrderNum() {
         return "ORD-" + UUID.randomUUID().toString();
@@ -112,8 +148,10 @@ public class PaymentService {
             throw new IllegalArgumentException("본인의 결제만 취소할 수 있습니다.");
         }
 
-        // 1. 포트원 결제 취소 API 호출
-        portOneService.cancelPayment(payment.getImpUid(), "사용자 요청에 의한 취소");
+        // 1. 포트원 결제 취소 API 호출 (테스트 결제면 스킵)
+        if (!payment.getImpUid().startsWith("TEST_")) {
+            portOneService.cancelPayment(payment.getImpUid(), "사용자 요청에 의한 취소");
+        }
 
         // 2. 결제 상태 변경 (COMPLETED -> REFUNDED)
         payment.cancel();
