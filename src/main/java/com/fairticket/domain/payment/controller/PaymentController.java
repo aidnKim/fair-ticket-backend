@@ -1,15 +1,23 @@
 package com.fairticket.domain.payment.controller;
 
+import java.security.Principal;
+import java.util.Map;
+
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+
 import com.fairticket.domain.payment.dto.PaymentCreateRequestDto;
+import com.fairticket.domain.payment.dto.TestPaymentRequestDto;
 import com.fairticket.domain.payment.service.PaymentService;
 import com.fairticket.domain.payment.service.PortOneService;
 
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import java.security.Principal;
-import java.util.Map;
 
 @RestController
 @RequestMapping("/api/v1/payments")
@@ -46,5 +54,13 @@ public class PaymentController {
     public ResponseEntity<String> cancelByImpUid(@RequestBody Map<String, String> request) {
         portOneService.cancelPayment(request.get("impUid"), request.get("reason"));
         return ResponseEntity.ok("결제가 취소되었습니다.");
+    }
+    
+    // 테스트 결제 (포트원 없이)
+    @PostMapping("/test")
+    public ResponseEntity<String> processTestPayment(Principal principal,
+                                                      @RequestBody TestPaymentRequestDto requestDto) {
+        Long paymentId = paymentService.processTestPayment(principal.getName(), requestDto.getReservationId());
+        return ResponseEntity.ok("테스트 결제 완료! ID: " + paymentId);
     }
 }
