@@ -33,8 +33,8 @@ public class Reservation extends BaseTimeEntity {
     @JoinColumn(name = "schedule_id", nullable = false)
     private ConcertSchedule schedule;
 
-    // 어떤 좌석인지 (1:1 관계 - 하나의 좌석은 하나의 예약만 가능)
-    @OneToOne(fetch = FetchType.LAZY)
+    // 어떤 좌석인지
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "seat_id", nullable = false)
     private Seat seat;
 
