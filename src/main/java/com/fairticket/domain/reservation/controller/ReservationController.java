@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.fairticket.domain.reservation.dto.ReservationCreateRequestDto;
+import com.fairticket.domain.reservation.dto.ReservationCreateResponseDto;
 import com.fairticket.domain.reservation.dto.ReservationResponseDto;
 import com.fairticket.domain.reservation.service.ReservationService;
 
@@ -27,10 +28,10 @@ public class ReservationController {
 
     // 좌석 예약 (선점)
     @PostMapping
-    public ResponseEntity<Long> createReservation(Principal principal,
+    public ResponseEntity<ReservationCreateResponseDto> createReservation(Principal principal,
                                                     @RequestBody ReservationCreateRequestDto requestDto) {
-        Long reservationId = reservationService.createReservation(principal.getName(), requestDto);
-        return ResponseEntity.ok(reservationId);
+    	ReservationCreateResponseDto response = reservationService.createReservation(principal.getName(), requestDto);
+        return ResponseEntity.ok(response);
     }
     
     // 회원 별 예약 내역 조회

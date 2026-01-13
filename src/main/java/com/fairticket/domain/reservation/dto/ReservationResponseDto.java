@@ -21,6 +21,7 @@ public class ReservationResponseDto {
     private String status;          // PENDING, PAID, CANCELLED
     private BigDecimal price;              // 가격
     private LocalDateTime expireTime;  // 만료 시간
+    private Long concertId;			// 콘서트 id
 
     public static ReservationResponseDto from(Reservation reservation) {
         DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern("yyyy.MM.dd");
@@ -36,6 +37,7 @@ public class ReservationResponseDto {
                 .status(reservation.getStatus().name())
                 .price(reservation.getSeat().getPrice())
                 .expireTime(reservation.getExpireTime())
+                .concertId(reservation.getSchedule().getConcert().getId())
                 .build();
     }
 }
