@@ -15,6 +15,7 @@ import com.fairticket.domain.payment.model.Payment;
 import com.fairticket.domain.payment.repository.PaymentRepository;
 import com.fairticket.domain.payment.service.PaymentService;
 import com.fairticket.domain.reservation.dto.ReservationCreateRequestDto;
+import com.fairticket.domain.reservation.dto.ReservationCreateResponseDto;
 import com.fairticket.domain.reservation.dto.ReservationResponseDto;
 import com.fairticket.domain.reservation.model.Reservation;
 import com.fairticket.domain.reservation.model.ReservationStatus;
@@ -38,7 +39,7 @@ public class ReservationService {
     private final PaymentService paymentService;
 
     @Transactional
-    public Long createReservation(String email, ReservationCreateRequestDto requestDto) {
+    public ReservationCreateResponseDto createReservation(String email, ReservationCreateRequestDto requestDto) {
         // 1. 유저 조회
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
@@ -76,7 +77,12 @@ public class ReservationService {
                 .reservationTime(LocalDateTime.now())
                 .build();
 
-        return reservationRepository.save(reservation).getId();
+        Reservation saved = reservationRepository.save(reservation);
+
+        return ReservationCreateResponseDto.builder()
+                .reservationId(saved.getId())
+                .expireTime(saved.getExpireTime())
+                .build();
     }
     
     // 만료된 예약 일괄 취소 (스케줄러가 호출)
