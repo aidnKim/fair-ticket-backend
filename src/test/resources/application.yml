@@ -28,3 +28,8 @@ jwt:
   secret: V2hhdGlzVGhlTW9zdEltcG9ydGFudFRoaW5nSW5MaWZlSXRoaW5rSXIsSGVhbHRoQW5kSGFwcGluZXNz
   # 토큰 유효 시간 (30분)
   expiration: 1800000
+
+#port one 설정
+portone:
+  api-key: "test-api-key"
+  api-secret: "test-api-secret"
