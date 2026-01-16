@@ -1,10 +1,3 @@
--- 0. 공연장 데이터
-INSERT INTO venues (name, total_rows, seats_per_row, vip_rows) VALUES
-('벡스코 제1전시장 1홀', 5, 10, 'A,B'),
-('블루스퀘어 신한카드홀', 4, 8, 'A'),
-('잠실 올림픽주경기장', 6, 15, 'A,B,C'),
-('잠실종합운동장 내 빅탑', 5, 12, 'A,B');
-
 -- 1. 유저 데이터 (로그인 테스트용)
 -- password는 BCrypt로 '1234'를 암호화한 문자열
 INSERT INTO users (email, password, name, role, point, created_at, updated_at)
@@ -15,54 +8,65 @@ VALUES (
 ON DUPLICATE KEY UPDATE
   updated_at = NOW();
 
+-- 2. 공연장 데이터
+INSERT INTO venues (name, total_rows, seats_per_row, vip_rows) VALUES
+('벡스코 제1전시장 1홀', 5, 10, 'A,B'),
+('블루스퀘어 신한카드홀', 4, 8, 'A'),
+('잠실 올림픽주경기장', 6, 15, 'A,B,C'),
+('잠실종합운동장 내 빅탑', 5, 12, 'A,B');
 
-
--- 2. 공연 데이터 (메인 페이지용)
+-- 3. 공연 데이터 (메인 페이지용)
 INSERT INTO concerts (title, description, image_url, detail_image_url, start_date, end_date, venue_id, created_at, updated_at)
 VALUES 
 (
-	'2025-26 엠씨더맥스 이수 콘서트 ‘겨울나기’ - 부산', 
+	'2026 엠씨더맥스 이수 콘서트 ‘겨울나기’ - 부산', 
 	'믿고 듣는 이수의 감동적인 라이브!', 
 	'/images/mcthemax_poster.jpg', 
 	'/images/mcthemax_detail.jpg',
-	'2026-01-17', '2026-01-20',
+	'2026-06-17', '2026-06-19',
 	1,
     NOW(), NOW()
 ),
 
 (
-	'뮤지컬 <지킬 앤 하이드>', 
+	'2026 이창섭 단독 콘서트 〈AndEnd〉', 
 	'지금 이 순간, 다시 시작되는 전설', 
-	'https://placehold.co/600x800?text=Jekyll+%26+Hyde', 
-	null,
-	'2026-06-10', '2026-08-20',
+	'/images/leecs_poster.jpg', 
+	'/images/leecs_detail.jpg',
+	'2026-06-20', '2026-06-21',
 	2,
     NOW(), NOW()
 ),
 
 (
-	'싸이 흠뻑쇼 SUMMER SWAG 2025', 
-	'미친듯이 놀 준비 되었는가?', 
-	'https://placehold.co/600x800?text=PSY+SUMMER+SWAG', 
-	null,
+	'2026 이문세 ‘The Best’ - 대구', 
+	'지금 이 순간, 다시 시작되는 전설', 
+	'/images/lms_poster.jpg', 
+	'/images/lms_detail.jpg',
 	'2026-07-15', '2026-07-15',
 	3,
     NOW(), NOW()
 ),
 
 (
-	'태양의서커스 <루치아>', 
-	'꿈과 현실을 넘나드는 멕시코의 전설', 
-	'https://placehold.co/600x800?text=Cirque+Luzia', 
-	null,
-	'2026-04-01', '2026-05-30',
+	'센트럴 씨 첫 단독 내한공연', 
+	'Central Cee - CAN’T RUSH GREATNESS WORLD TOUR - Asia 2026설', 
+	'/images/cen_poster.jpg', 
+	'/images/cen_detail.jpg',
+	'2026-07-20', '2026-07-22',
 	4,
     NOW(), NOW()
 );
 
--- 3. Schedules (이수 콘서트 1, 2, 3회차)
+-- 4. 스케줄 데이터
 INSERT INTO concert_schedules (concert_id, concert_date, total_seats, available_seats, created_at, updated_at)
 VALUES 
-(1, '2026-01-17 19:00:00', 100, 100, NOW(), NOW()),
-(1, '2026-01-18 18:00:00', 100, 100, NOW(), NOW()),
-(1, '2026-01-19 17:00:00', 100, 100, NOW(), NOW());
+(1, '2026-06-17 19:00:00', 50, 50, NOW(), NOW()),
+(1, '2026-06-18 18:00:00', 50, 50, NOW(), NOW()),
+(1, '2026-06-19 17:00:00', 50, 50, NOW(), NOW()),
+(2, '2026-06-20 19:00:00', 32, 32, NOW(), NOW()),
+(2, '2026-06-21 18:00:00', 32, 32, NOW(), NOW()),
+(3, '2026-07-15 17:00:00', 90, 90, NOW(), NOW()),
+(4, '2026-07-20 19:00:00', 60, 60, NOW(), NOW()),
+(4, '2026-07-21 18:00:00', 60, 60, NOW(), NOW()),
+(4, '2026-07-22 17:00:00', 60, 60, NOW(), NOW());
