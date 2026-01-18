@@ -1,0 +1,42 @@
+version: '3'
+services:
+  backend:
+    build: ./backend
+    container_name: fair-backend
+    volumes:
+      # 호스트의 지갑 폴더를 컨테이너 내부 /app/wallet 에 연결
+      - ./wallet:/app/wallet
+    environment:
+      # 1. Oracle 드라이버 & 방언 강제 지정 (MySQL 충돌 방지)
+      - SPRING_DATASOURCE_DRIVER_CLASS_NAME=oracle.jdbc.OracleDriver
+      - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.OracleDialect
+      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.OracleDialect
+      
+      # 2. DB 접속 정보 (TNS_ADMIN 경로 주의)
+      - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@mydb_high?TNS_ADMIN=/app/wallet
+      - SPRING_DATASOURCE_USERNAME=ADMIN
+      - SPRING_DATASOURCE_PASSWORD=Qlvlejtm7777
+      
+      # 3. 초기화 설정 (첫 실행 시 create, 운영 시 update)
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_SQL_INIT_MODE=always
+      
+      # 4. SQL 로그 보기
+      - SPRING_JPA_SHOW_SQL=true
+      - SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL=true
+    networks:
+      - fair-network
+
+  frontend:
+    build: ./frontend
+    container_name: fair-frontend
+    ports:
+      - "80:80" # 외부 80포트를 내부 80포트로 연결
+    depends_on:
+      - backend
+    networks:
+      - fair-network
+
+networks:
+  fair-network:
+    driver: bridge
