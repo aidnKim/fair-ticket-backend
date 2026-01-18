@@ -20,6 +20,9 @@ services:
       # 3. 초기화 설정 (첫 실행 시 create, 운영 시 update)
       - SPRING_JPA_HIBERNATE_DDL_AUTO=create
       - SPRING_SQL_INIT_MODE=always
+
+      # JPA가 테이블 만들 때까지 데이터 삽입 미루기
+      - SPRING_JPA_DEFER_DATASOURCE_INITIALIZATION=true
       
       # 4. SQL 로그 보기
       - SPRING_JPA_SHOW_SQL=true
