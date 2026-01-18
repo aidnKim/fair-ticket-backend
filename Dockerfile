@@ -1,6 +1,10 @@
 # [1단계: 빌드 단계] - 여기서 소스 코드를 빌드해서 jar를 만듭니다.
 FROM amazoncorretto:17 AS builder
 WORKDIR /app
+
+# Maven 압축 해제를 위해 tar와 gzip 설치
+RUN yum install -y tar gzip
+
 COPY . .
 # 윈도우에서 넘어온 파일일 경우 실행 권한 문제 방지
 RUN chmod +x ./mvnw
