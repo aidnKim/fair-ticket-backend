@@ -1,5 +1,5 @@
 # 1. Base Image (자바 17 환경)
-FROM openjdk:17-jdk-slim
+FROM amazoncorretto:17
 
 # 2. 작업 디렉토리 설정
 WORKDIR /app
