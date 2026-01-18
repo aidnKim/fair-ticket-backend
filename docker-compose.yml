@@ -27,6 +27,13 @@ services:
       # 4. SQL 로그 보기
       - SPRING_JPA_SHOW_SQL=true
       - SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL=true
+
+      # 젠킨스에서 주입된 환경변수를 컨테이너 안으로 전달
+      - PORTONE_API_KEY=${PORTONE_API_KEY}
+      - PORTONE_API_SECRET=${PORTONE_API_SECRET}
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_EXPIRATION=${JWT_EXPIRATION}
+
     networks:
       - fair-network
 
