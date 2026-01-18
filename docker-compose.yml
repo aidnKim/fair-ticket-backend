@@ -18,7 +18,7 @@ services:
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
       
       # 3. 초기화 설정 (첫 실행 시 create, 운영 시 update)
-      - SPRING_JPA_HIBERNATE_DDL_AUTO=update
+      - SPRING_JPA_HIBERNATE_DDL_AUTO=create
       - SPRING_SQL_INIT_MODE=always
       
       # 4. SQL 로그 보기
