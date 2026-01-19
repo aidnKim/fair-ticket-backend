@@ -42,10 +42,25 @@ services:
     container_name: fair-frontend
     ports:
       - "80:80" # 외부 80포트를 내부 80포트로 연결
+      - "443:443" # HTTPS 포트 추가
+    volumes:
+      # 인증서 공유를 위한 볼륨 마운트
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
     depends_on:
       - backend
     networks:
       - fair-network
+
+  # 인증서 발급/갱신 담당 봇
+  certbot:
+    image: certbot/certbot
+    container_name: certbot
+    volumes:
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
+    # 매일 인증서 갱신 시도 (실패해도 괜찮음, 만료 가까워지면 성공함)
+    entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
 networks:
   fair-network:
