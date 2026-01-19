@@ -4,36 +4,21 @@ services:
     build: ./backend
     container_name: fair-backend
     volumes:
-      # 호스트의 지갑 폴더를 컨테이너 내부 /app/wallet 에 연결
       - ./wallet:/app/wallet
     environment:
-      # 1. Oracle 드라이버 & 방언 강제 지정 (MySQL 충돌 방지)
       - SPRING_DATASOURCE_DRIVER_CLASS_NAME=oracle.jdbc.OracleDriver
       - SPRING_JPA_DATABASE_PLATFORM=org.hibernate.dialect.OracleDialect
-      - SPRING_JPA_PROPERTIES_HIBERNATE_DIALECT=org.hibernate.dialect.OracleDialect
-      
-      # 2. DB 접속 정보 (TNS_ADMIN 경로 주의)
       - SPRING_DATASOURCE_URL=jdbc:oracle:thin:@mydb_high?TNS_ADMIN=/app/wallet
       - SPRING_DATASOURCE_USERNAME=ADMIN
       - SPRING_DATASOURCE_PASSWORD=${DB_PASSWORD}
-      
-      # 3. 초기화 설정 (첫 실행 시 create, 운영 시 update)
       - SPRING_JPA_HIBERNATE_DDL_AUTO=create
       - SPRING_SQL_INIT_MODE=always
-
-      # JPA가 테이블 만들 때까지 데이터 삽입 미루기
       - SPRING_JPA_DEFER_DATASOURCE_INITIALIZATION=true
-      
-      # 4. SQL 로그 보기
       - SPRING_JPA_SHOW_SQL=true
       - SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL=true
-
-      # 젠킨스에서 주입된 환경변수를 컨테이너 안으로 전달
       - PORTONE_API_KEY=${PORTONE_API_KEY}
       - PORTONE_API_SECRET=${PORTONE_API_SECRET}
       - JWT_SECRET=${JWT_SECRET}
-      - JWT_EXPIRATION=${JWT_EXPIRATION}
-
     networks:
       - fair-network
 
@@ -41,10 +26,11 @@ services:
     build: ./frontend
     container_name: fair-frontend
     ports:
-      - "80:80" # 외부 80포트를 내부 80포트로 연결
-      - "443:443" # HTTPS 포트 추가
+      - "80:80"
+      # 아직 443은 열지 않기 (인증서 받고 열기)
+      # - "443:443" 
     volumes:
-      # 인증서 공유를 위한 볼륨 마운트
+      # Certbot과 폴더를 공유해야 인증
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
     depends_on:
@@ -52,14 +38,12 @@ services:
     networks:
       - fair-network
 
-  # 인증서 발급/갱신 담당 봇
   certbot:
     image: certbot/certbot
     container_name: certbot
     volumes:
       - ./certbot/conf:/etc/letsencrypt
       - ./certbot/www:/var/www/certbot
-    # 매일 인증서 갱신 시도 (실패해도 괜찮음, 만료 가까워지면 성공함)
     entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
 
 networks:
