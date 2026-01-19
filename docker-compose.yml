@@ -27,8 +27,7 @@ services:
     container_name: fair-frontend
     ports:
       - "80:80"
-      # 아직 443은 열지 않기 (인증서 받고 열기)
-      # - "443:443" 
+      - "443:443" 
     volumes:
       # Certbot과 폴더를 공유해야 인증
       - ./certbot/conf:/etc/letsencrypt
