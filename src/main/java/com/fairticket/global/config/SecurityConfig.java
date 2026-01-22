@@ -80,7 +80,11 @@ public class SecurityConfig {
         @Override
         public void addCorsMappings(CorsRegistry registry) {
             registry.addMapping("/**")
-                    .allowedOrigins("http://localhost:5173") // 리액트 주소 허용
+                    .allowedOrigins(
+                    		"http://localhost:5173",
+                    		"https://fairticket.store",
+                    	    "https://www.fairticket.store"
+                    		) // 리액트 주소 허용
                     .allowedMethods("GET", "POST", "PUT", "DELETE");
         }
     }
