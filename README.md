@@ -10,6 +10,7 @@
 
 * **개발 기간:** 2025.01 ~ (진행 중, MVP)
 * **개발 인원:** 1인 (풀스택)
+* **배포 주소:** [서비스 바로가기 (Click)](https://www.fairticket.store)
 * **Frontend Repository:** [Github Link](https://github.com/aidnKim/fair-ticket-frontend)
 
 <br>
