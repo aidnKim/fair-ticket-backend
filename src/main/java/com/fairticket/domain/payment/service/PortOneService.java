@@ -54,7 +54,7 @@ public class PortOneService {
      */
     public PortOnePaymentResponseDto getPaymentInfo(String impUid) {
         String accessToken = getAccessToken();
-        String url = PORTONE_API_URL + "/payments/" + impUid;
+        String url = PORTONE_API_URL + "/payments/" + impUid + "?include_sandbox=true";
 
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(accessToken);
