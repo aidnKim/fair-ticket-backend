@@ -3,6 +3,7 @@ package com.fairticket.domain.reservation.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
+import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -38,6 +39,7 @@ public class ReservationService {
     private final PaymentRepository paymentRepository;
     private final PaymentService paymentService;
 
+    @CacheEvict(value = "seats", key = "#requestDto.scheduleId")
     @Transactional
     public ReservationCreateResponseDto createReservation(String email, ReservationCreateRequestDto requestDto) {
         // 1. 유저 조회
