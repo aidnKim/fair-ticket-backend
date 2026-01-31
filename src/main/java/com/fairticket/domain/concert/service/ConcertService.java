@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -99,6 +100,7 @@ public class ConcertService {
     }
 
     // 4. 특정 스케줄의 좌석 조회
+    @Cacheable(value = "seats", key = "#scheduleId")
     @Transactional(readOnly = true)
     public List<SeatResponseDto> getSeats(Long scheduleId) {
         return seatRepository.findByScheduleIdOrderBySeatRowAscSeatColAsc(scheduleId).stream()
