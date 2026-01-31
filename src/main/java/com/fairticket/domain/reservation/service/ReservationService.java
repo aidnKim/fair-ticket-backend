@@ -2,7 +2,10 @@ package com.fairticket.domain.reservation.service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import org.redisson.api.RLock;
+import org.redisson.api.RedissonClient;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -38,53 +41,64 @@ public class ReservationService {
     private final UserRepository userRepository;
     private final PaymentRepository paymentRepository;
     private final PaymentService paymentService;
+    private final RedissonClient redissonClient;
 
     @CacheEvict(value = "seats", key = "#requestDto.scheduleId")
     @Transactional
     public ReservationCreateResponseDto createReservation(String email, ReservationCreateRequestDto requestDto) {
-        // 1. 유저 조회
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
-
-        // 2. 스케줄 조회
-        ConcertSchedule schedule = scheduleRepository.findById(requestDto.getScheduleId())
-                .orElseThrow(() -> new IllegalArgumentException("스케줄을 찾을 수 없습니다."));
-
-        // 3. 좌석 조회 (비관적 락 적용)
-        // 이 줄이 실행되는 순간, 트랜잭션이 끝날 때까지 다른 사람은 이 seatId를 건들지 못함.
-        Seat seat = seatRepository.findByIdWithLock(requestDto.getSeatId())
-                .orElseThrow(() -> new IllegalArgumentException("좌석을 찾을 수 없습니다."));
-
-        // 4. 이미 예약된 좌석인지 확인
-        if (seat.getStatus() != SeatStatus.AVAILABLE) {
-            throw new IllegalArgumentException("이미 선택된 좌석입니다.");
+        // 분산락 키 생성
+        String lockKey = "lock:seat:" + requestDto.getSeatId();
+        RLock lock = redissonClient.getLock(lockKey);
+        
+        try {
+            // 락 획득 시도 (최대 3초 대기, 획득 후 5초 유지)
+            boolean isLocked = lock.tryLock(3, 5, TimeUnit.SECONDS);
+            
+            if (!isLocked) {
+                throw new IllegalStateException("다른 사용자가 해당 좌석을 예약 중입니다. 잠시 후 다시 시도해주세요.");
+            }
+            
+            // 1. 유저 조회
+            User user = userRepository.findByEmail(email)
+                    .orElseThrow(() -> new IllegalArgumentException("유저를 찾을 수 없습니다."));
+            // 2. 스케줄 조회
+            ConcertSchedule schedule = scheduleRepository.findById(requestDto.getScheduleId())
+                    .orElseThrow(() -> new IllegalArgumentException("스케줄을 찾을 수 없습니다."));
+            // 3. 좌석 조회 (비관적 락 제거, 일반 조회로 변경)
+            Seat seat = seatRepository.findById(requestDto.getSeatId())
+                    .orElseThrow(() -> new IllegalArgumentException("좌석을 찾을 수 없습니다."));
+            // 4. 이미 예약된 좌석인지 확인
+            if (seat.getStatus() != SeatStatus.AVAILABLE) {
+                throw new IllegalArgumentException("이미 선택된 좌석입니다.");
+            }
+            // 5. 좌석 상태 변경
+            seat.reserve();
+            seatRepository.saveAndFlush(seat);
+            
+            // 6. 잔여 좌석 감소
+            schedule.decreaseAvailableSeats();
+            // 7. 예약 생성 및 저장
+            Reservation reservation = Reservation.builder()
+                    .user(user)
+                    .seat(seat)
+                    .schedule(schedule)
+                    .reservationTime(LocalDateTime.now())
+                    .build();
+            Reservation saved = reservationRepository.save(reservation);
+            return ReservationCreateResponseDto.builder()
+                    .reservationId(saved.getId())
+                    .expireTime(saved.getExpireTime())
+                    .build();
+                    
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new IllegalStateException("락 획득 중 오류가 발생했습니다.");
+        } finally {
+            // 락 해제 (본인이 획득한 락만 해제)
+            if (lock.isHeldByCurrentThread()) {
+                lock.unlock();
+            }
         }
-
-        // 5. 좌석 상태 변경 (AVAILABLE -> TEMPORARY_RESERVED)
-        // Seat 엔티티 안에 만들어둔 reserve() 메소드 사용
-        seat.reserve();
-        
-        // (수정) 변경 사항을 즉시 DB에 반영 (플러시)
-        // Dirty Checking을 기다리지 않고 강제로 Update 쿼리를 날림
-        seatRepository.saveAndFlush(seat);
-        
-        // 6. 잔여 좌석 감소
-        schedule.decreaseAvailableSeats();
-
-        // 7. 예약 생성 및 저장
-        Reservation reservation = Reservation.builder()
-                .user(user)
-                .seat(seat)
-                .schedule(schedule)
-                .reservationTime(LocalDateTime.now())
-                .build();
-
-        Reservation saved = reservationRepository.save(reservation);
-
-        return ReservationCreateResponseDto.builder()
-                .reservationId(saved.getId())
-                .expireTime(saved.getExpireTime())
-                .build();
     }
     
     // 만료된 예약 일괄 취소 (스케줄러가 호출)
