@@ -2,8 +2,12 @@ package com.fairticket.domain.queue.service;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+
+import java.util.Map;
+
 import org.redisson.api.RScoredSortedSet;
 import org.redisson.api.RedissonClient;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 
 @Slf4j
@@ -12,6 +16,7 @@ import org.springframework.stereotype.Service;
 public class QueueService {
 	
     private final RedissonClient redissonClient;
+    private final SimpMessagingTemplate messagingTemplate;
     
     private static final String WAITING_QUEUE_KEY = "waiting_queue:";
     private static final String ACTIVE_SET_KEY = "active_set:";
@@ -56,9 +61,21 @@ public class QueueService {
             if (email != null) {
                 redissonClient.getSet(activeKey).add(email);
                 log.info("입장 허용: email={}", email);
+                
+                // WebSocket으로 개인 알림 (입장 가능)
+                messagingTemplate.convertAndSend(
+                    "/topic/queue/" + scheduleId + "/" + email,
+                    Map.of("type", "ENTER_ALLOWED", "canEnter", true)
+                );
             }
         }
         redissonClient.getSet(activeKey).expire(java.time.Duration.ofMinutes(10));
+        
+        // 전체 대기자에게 순번 업데이트 브로드캐스트
+        messagingTemplate.convertAndSend(
+            "/topic/queue/" + scheduleId,
+            Map.of("type", "QUEUE_UPDATE", "remainingCount", queue.size())
+        );
     }
     
     // 대기 인원
