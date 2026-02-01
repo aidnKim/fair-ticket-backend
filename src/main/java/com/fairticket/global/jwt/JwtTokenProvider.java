@@ -91,4 +91,13 @@ public class JwtTokenProvider {
             return e.getClaims();
         }
     }
+    
+    public String getEmail(String token) {
+        return Jwts.parserBuilder()
+                .setSigningKey(key)
+                .build()
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject();
+    }
 }
