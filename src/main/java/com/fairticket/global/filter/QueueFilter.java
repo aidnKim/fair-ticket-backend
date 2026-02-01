@@ -26,8 +26,7 @@ public class QueueFilter implements Filter {
     // 대기열 체크 제외할 경로들
     private static final List<String> EXCLUDE_PATHS = List.of(
         "/api/v1/queue",      // 대기열 API 자체
-        "/api/v1/auth",       // 로그인/회원가입
-        "/api/v1/concerts",   // 콘서트 목록 (공개)
+        "/api/v1/users",       // 로그인/회원가입
         "/ws",                // WebSocket
         "/swagger",           // Swagger
         "/h2-console"         // H2 콘솔
