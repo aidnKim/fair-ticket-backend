@@ -32,3 +32,7 @@ build/
 ### VS Code ###
 .vscode/
 src/main/resources/application.yml
+
+# Mac System Files
+.DS_Store
+**/.DS_Store
