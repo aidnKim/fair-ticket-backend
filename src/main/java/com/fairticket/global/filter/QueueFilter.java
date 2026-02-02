@@ -11,13 +11,15 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
+import org.springframework.web.util.ContentCachingRequestWrapper;
+
 import java.io.IOException;
 import java.util.List;
 
 @Slf4j
 @Component
 @RequiredArgsConstructor
-@Order(1)  // 다른 필터보다 먼저 실행
+@Order(1)  // CachingRequestFilter(0) 다음에 실행
 public class QueueFilter implements Filter {
 	
     private final QueueService queueService;
@@ -26,8 +28,7 @@ public class QueueFilter implements Filter {
     // 대기열 체크 제외할 경로들
     private static final List<String> EXCLUDE_PATHS = List.of(
         "/api/v1/queue",      // 대기열 API 자체
-        "/api/v1/auth",       // 로그인/회원가입
-        "/api/v1/concerts",   // 콘서트 목록 (공개)
+        "/api/v1/users",       // 로그인/회원가입
         "/ws",                // WebSocket
         "/swagger",           // Swagger
         "/h2-console"         // H2 콘솔
@@ -74,7 +75,22 @@ public class QueueFilter implements Filter {
     }
     
     private boolean isExcludedPath(String uri) {
-        return EXCLUDE_PATHS.stream().anyMatch(uri::startsWith);
+        // 기본 제외 경로
+        if (EXCLUDE_PATHS.stream().anyMatch(uri::startsWith)) {
+            return true;
+        }
+        
+        // 콘서트 목록 제외 (정확히 /api/v1/concerts)
+        if (uri.equals("/api/v1/concerts")) {
+            return true;
+        }
+        
+        // 콘서트 상세조회 제외 (/api/v1/concerts/1 형태)
+        if (uri.matches("/api/v1/concerts/\\d+$")) {
+            return true;
+        }
+        
+        return false;
     }
     
     private String resolveToken(HttpServletRequest request) {
@@ -88,12 +104,71 @@ public class QueueFilter implements Filter {
     }
     
     private Long extractScheduleId(HttpServletRequest request) {
-        // URL에서 scheduleId 추출 시도
-        // 예: /api/v1/reservations → body에서, /api/v1/concerts/1/seats → path에서
         String uri = request.getRequestURI();
         
-        // 간단한 구현: 기본값 1L (실제로는 요청에 맞게 수정 필요)
-        // 또는 모든 스케줄에 대해 하나의 대기열 사용
-        return 1L;
+        // 1. /api/v1/concerts/{id}/seats 에서 추출
+        Long fromUrl = extractFromUrl(uri);
+        if (fromUrl != null) {
+            return fromUrl;
+        }
+        
+        // 2. POST Body에서 추출 (예약 API)
+        if (request instanceof ContentCachingRequestWrapper) {
+            ContentCachingRequestWrapper wrapper = (ContentCachingRequestWrapper) request;
+            byte[] content = wrapper.getContentAsByteArray();
+            if (content.length > 0) {
+                String body = new String(content);
+                Long fromBody = extractFromBody(body);
+                if (fromBody != null) {
+                    return fromBody;
+                }
+            }
+        }
+        
+        return 1L;  // 기본값
+    }
+    private Long extractFromUrl(String uri) {
+    	
+        // /api/v1/concerts/3/seats → 3 추출
+        if (uri.matches(".*/concerts/\\d+/seats.*")) {
+            String[] parts = uri.split("/");
+            for (int i = 0; i < parts.length; i++) {
+                if ("concerts".equals(parts[i]) && i + 1 < parts.length) {
+                    try {
+                        return Long.parseLong(parts[i + 1]);
+                    } catch (NumberFormatException e) {
+                        return null;
+                    }
+                }
+            }
+        }
+        return null;
+    }
+    private Long extractFromBody(String body) {
+    	
+        // {"scheduleId": 1, ...} 에서 추출
+        try {
+            if (body.contains("scheduleId")) {
+                int idx = body.indexOf("scheduleId");
+                String sub = body.substring(idx);
+                // 숫자만 추출
+                StringBuilder num = new StringBuilder();
+                boolean started = false;
+                for (char c : sub.toCharArray()) {
+                    if (Character.isDigit(c)) {
+                        started = true;
+                        num.append(c);
+                    } else if (started) {
+                        break;
+                    }
+                }
+                if (num.length() > 0) {
+                    return Long.parseLong(num.toString());
+                }
+            }
+        } catch (Exception e) {
+            // 파싱 실패 시 무시
+        }
+        return null;
     }
 }
