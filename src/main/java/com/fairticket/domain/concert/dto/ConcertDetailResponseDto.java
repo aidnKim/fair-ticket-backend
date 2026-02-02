@@ -1,13 +1,20 @@
 package com.fairticket.domain.concert.dto;
 
-import com.fairticket.domain.concert.model.Concert;
-import lombok.Getter;
-
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import com.fairticket.domain.concert.model.Concert;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
+import com.fasterxml.jackson.datatype.jsr310.ser.LocalDateTimeSerializer;
+
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+
 @Getter
+@NoArgsConstructor
 public class ConcertDetailResponseDto {
     private Long id;
     private String title;
@@ -15,7 +22,13 @@ public class ConcertDetailResponseDto {
     private String venue;
     private String imageUrl;
     private String detailImageUrl; // 상세 이미지
+    
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime startDate;
+    
+    @JsonSerialize(using = LocalDateTimeSerializer.class)
+    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime endDate;
     private List<ScheduleResponseDto> schedules; // 예매 가능 스케줄 목록
 
