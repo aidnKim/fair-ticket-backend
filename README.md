@@ -20,6 +20,7 @@
 | 구분 | 기술 |
 | :-- | :-- |
 | **Backend** | Java 17, Spring Boot 3.5, Spring Data JPA, Spring Security |
+| **Cache/Queue** | Redis (Redisson), Redis 
 | **Database** | Oracle Cloud (Production) |
 | **Payment** | PortOne 결제 API 연동 |
 | **DevOps** | Docker, Docker Compose, Nginx (Reverse Proxy), Let's Encrypt (HTTPS) |
@@ -28,9 +29,9 @@
 <br>
 
 ## 시스템 아키텍처 (Architecture)
-Docker Compose를 활용하여 Backend, Frontend, Certbot(SSL 인증서) 컨테이너를 구성했습니다. Nginx를 Reverse Proxy로 두어 HTTPS 통신과 보안을 강화했으며, Oracle Cloud Autonomous Database를 통해 안정적인 데이터 저장소를 구축했습니다.
+Docker Compose를 활용하여 Backend, Frontend, Redis, Certbot(SSL 인증서) 컨테이너를 구성했습니다. Nginx를 Reverse Proxy로 두어 HTTPS 통신과 보안을 강화했으며, Oracle Cloud Autonomous Database를 통해 안정적인 데이터 저장소를 구축했습니다.
 
-<img width="2613" height="1478" alt="Image" src="https://github.com/user-attachments/assets/7989ad8c-a47c-44ea-800d-ac17f1610f99" />
+<img width="1437" height="1082" alt="Image" src="https://github.com/user-attachments/assets/ad6c4247-f7a7-4ffe-b67a-6a005451a7e9" />
 
 <br>
 
@@ -43,7 +44,7 @@ Docker Compose를 활용하여 Backend, Frontend, Certbot(SSL 인증서) 컨테�
 
 ### 2. 데이터 무결성 보장을 위한 트랜잭션 관리
 * **문제:** 예약 생성, 좌석 상태 변경, 잔여 좌석 수 감소 등 여러 작업이 하나의 단위로 처리되어야 하는데, 중간에 오류 발생 시 데이터 불일치 위험 존재.
-* **해결:** [ReservationService](cci:2://file:///Users/hyeonsoo/Desktop/playground/project/fair-ticket/fair-ticket-backend/src/main/java/com/fairticket/domain/reservation/service/ReservationService.java:28:0-131:1)와 [PaymentService](cci:2://file:///Users/hyeonsoo/Desktop/playground/project/fair-ticket/fair-ticket-backend/src/main/java/com/fairticket/domain/payment/service/PaymentService.java:21:0-176:1)의 핵심 로직에 **`@Transactional`** 어노테이션을 적용.
+* **해결:** `ReservationService`와 `PaymentService`의 핵심 로직에 **`@Transactional`** 어노테이션을 적용.
 * **결과:** 예외 발생 시 전체 로직이 **Rollback**되도록 처리하여, 어떤 상황에서도 **데이터 정합성**을 보장하는 원자성(Atomicity) 확보.
 
 ### 3. 예약 만료 자동화 (Scheduler)
@@ -53,7 +54,7 @@ Docker Compose를 활용하여 Backend, Frontend, Certbot(SSL 인증서) 컨테�
 
 ### 4. 결제 검증 실패 시 서버 측 자동 환불 처리
 * **문제:** 프론트엔드에서 결제 성공 후 백엔드 검증 과정에서 실패할 경우, 사용자 브라우저 종료나 네트워크 끊김으로 **환불 요청이 누락**되어 돈만 빠져나가는 위험 존재.
-* **해결:** 검증과 취소의 책임을 **서버로 일원화**. [PaymentService](cci:2://file:///Users/hyeonsoo/Desktop/playground/project/fair-ticket/fair-ticket-backend/src/main/java/com/fairticket/domain/payment/service/PaymentService.java:21:0-176:1)에서 검증 실패 감지 시 **즉시 포트원 API를 호출**하여 자동 환불 처리.
+* **해결:** 검증과 취소의 책임을 **서버로 일원화**. `PaymentService`에서 검증 실패 감지 시 **즉시 포트원 API를 호출**하여 자동 환불 처리.
 * **결과:** 네트워크 불안정 상황에서도 **환불 누락 0%**, 통신 횟수 2회 → 1회로 단축, Fail-Safe 설계 적용.
 * 👉 [상세 과정 보기](./docs/troubleshooting-01-payment-verification.md)
 
@@ -63,6 +64,21 @@ Docker Compose를 활용하여 Backend, Frontend, Certbot(SSL 인증서) 컨테�
 * **결과:** API Key가 정확히 로드되어 **포트원 인증 정상 동작**. API Key, 전화번호 등 0으로 시작하는 값 설정 시 주의사항 학습.
 * 👉 [상세 과정 보기](./docs/troubleshooting-02-yaml-parsing-issue.md)
 
+### 6. Redis 캐시 직렬화 오류 해결
+* **문제:** @Cacheable 적용 시 LocalDateTime 필드에서 SerializationException 발생
+* **해결:** RedisConfig에 JavaTimeModule 등록, GenericJackson2JsonRedisSerializer에 커스텀 ObjectMapper 적용
+* **결과:** DTO에 개별 어노테이션 없이 전역 설정으로 JSON 직렬화 정상 동작
+
+### 7. Redis 카운터 기반 실시간 잔여석 관리
+* **문제:** 캐시 적용 시 잔여석이 실시간 반영되지 않는 문제
+* **해결:** 캐시 대상(공연 정보)과 실시간 데이터(잔여석)를 분리, Redis Atomic Counter로 잔여석 관리
+* **결과:** 캐시 성능 유지하면서 잔여석 실시간 반영
+
+### 8. Redis 기반 대기열 시스템 구축
+* **문제:** 인기 공연 오픈 시 동시 접속 폭주로 서버 과부하 우려
+* **해결:** Redis Sorted Set으로 대기열 관리, Scheduler로 주기적 입장 허용, Filter로 API 접근 제어
+* **결과:** 서버 안정성 확보, 순차적 입장으로 공정한 예매 기회 보장
+
 <br>
 
 ## ERD (Database Design)
@@ -70,7 +86,7 @@ Docker Compose를 활용하여 Backend, Frontend, Certbot(SSL 인증서) 컨테�
 
 
 <a href="https://dbdiagram.io/d/FairTicket-6977834abd82f5fce2a3c8f0" target="_blank">
-  <img width="1441" height="508" alt="Image" src="https://github.com/user-attachments/assets/46cfb31a-fe9b-4a25-b4de-26a101c18e49" />
+  <img width="1485" height="517" alt="Image" src="https://github.com/user-attachments/assets/e6839b51-297a-4418-b5d0-abf51a1b3044" />
 </a>
 <br>
 
@@ -94,8 +110,8 @@ Docker Compose를 활용하여 Backend, Frontend, Certbot(SSL 인증서) 컨테�
 
 | 단계 | 기능 | 목표 |
 | :--: | :-- | :-- |
-| **1** | **Redis 캐시 도입** | 좌석 현황 조회 성능 최적화, 분산 락을 통한 동시성 제어 고도화 |
-| **2** | **Kafka 메시지 큐 도입** | 대기열 시스템 구축, 트래픽 급증 시 안정적인 요청 처리 |
+| **1** | ~~**Redis 캐시 도입**~~ ✅ | 캐시 적용, 대기열 시스템 구축 완료 |
+| **2** | **Kafka 메시지 큐 도입** | 대기열 고도화, 분산 환경 지원 |
 | **3** | **AI 매크로 탐지 시스템** | 사용자 행동 패턴 분석을 통한 비정상 접근(매크로) 실시간 차단 |
 
 > 🎯 **최종 목표:** AI 기반의 Fair-Guard 시스템으로 모든 사용자에게 공정한 예매 기회를 보장하는 플랫폼
@@ -113,6 +129,8 @@ Docker Compose를 활용하여 Backend, Frontend, Certbot(SSL 인증서) 컨테�
 | `DELETE` | `/api/v1/reservations/{id}` | 예약 취소 (환불 포함) |
 | `POST` | `/api/v1/users/signup` | 회원가입 |
 | `POST` | `/api/v1/users/login` | 로그인 (JWT 발급) |
+| `POST` | `/api/v1/queue/{scheduleId}` | 대기열 등록 |
+| `GET` | `/api/v1/queue/{scheduleId}/position` | 대기 순번 조회 |
 
 <br>
 
