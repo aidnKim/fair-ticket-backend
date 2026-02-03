@@ -15,6 +15,7 @@ import com.fairticket.domain.concert.model.Seat;
 import com.fairticket.domain.concert.model.SeatStatus;
 import com.fairticket.domain.concert.repository.ConcertScheduleRepository;
 import com.fairticket.domain.concert.repository.SeatRepository;
+import com.fairticket.domain.concert.service.SeatAvailabilityService;
 import com.fairticket.domain.payment.model.Payment;
 import com.fairticket.domain.payment.repository.PaymentRepository;
 import com.fairticket.domain.payment.service.PaymentService;
@@ -42,6 +43,7 @@ public class ReservationService {
     private final PaymentRepository paymentRepository;
     private final PaymentService paymentService;
     private final RedissonClient redissonClient;
+    private final SeatAvailabilityService seatAvailabilityService;
 
     @CacheEvict(value = "seats", key = "#requestDto.scheduleId")
     @Transactional
@@ -77,6 +79,7 @@ public class ReservationService {
             
             // 6. 잔여 좌석 감소
             schedule.decreaseAvailableSeats();
+            seatAvailabilityService.decreaseSeats(requestDto.getScheduleId());
             // 7. 예약 생성 및 저장
             Reservation reservation = Reservation.builder()
                     .user(user)
@@ -119,6 +122,7 @@ public class ReservationService {
             
             // 잔여 좌석 증가
             reservation.getSchedule().increaseAvailableSeats();
+            seatAvailabilityService.increaseSeats(reservation.getSchedule().getId());
         }
         
         if (!expiredReservations.isEmpty()) {
