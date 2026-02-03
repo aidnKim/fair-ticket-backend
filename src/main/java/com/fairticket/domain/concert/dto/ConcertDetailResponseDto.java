@@ -5,6 +5,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 import com.fairticket.domain.concert.model.Concert;
+import com.fairticket.domain.concert.service.SeatAvailabilityService;
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.fasterxml.jackson.datatype.jsr310.deser.LocalDateTimeDeserializer;
@@ -22,17 +23,11 @@ public class ConcertDetailResponseDto {
     private String venue;
     private String imageUrl;
     private String detailImageUrl; // 상세 이미지
-    
-    @JsonSerialize(using = LocalDateTimeSerializer.class)
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime startDate;
-    
-    @JsonSerialize(using = LocalDateTimeSerializer.class)
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime endDate;
     private List<ScheduleResponseDto> schedules; // 예매 가능 스케줄 목록
 
-    public ConcertDetailResponseDto(Concert concert) {
+    public ConcertDetailResponseDto(Concert concert, SeatAvailabilityService availabilityService) {
         this.id = concert.getId();
         this.title = concert.getTitle();
         this.description = concert.getDescription();
@@ -41,9 +36,10 @@ public class ConcertDetailResponseDto {
         this.detailImageUrl = concert.getDetailImageUrl();
         this.startDate = concert.getStartDate();
         this.endDate = concert.getEndDate();
-        // 스케줄 엔티티 -> DTO 변환
+        // 스케줄에 실시간 잔여석 반영
         this.schedules = concert.getSchedules().stream()
-                .map(ScheduleResponseDto::from)
+                .map(s -> ScheduleResponseDto.from(s, 
+                        availabilityService.getAvailableSeats(s.getId())))
                 .collect(Collectors.toList());
     }
 

@@ -19,20 +19,16 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class ScheduleResponseDto {
 	private Long id;
-	
-	@JsonSerialize(using = LocalDateTimeSerializer.class)
-    @JsonDeserialize(using = LocalDateTimeDeserializer.class)
     private LocalDateTime concertDate;
-	
     private int totalSeats;
     private int availableSeats;
     
-    public static ScheduleResponseDto from(ConcertSchedule schedule) {
+    public static ScheduleResponseDto from(ConcertSchedule schedule, int availableSeats) {
     		return ScheduleResponseDto.builder()
     				.id(schedule.getId())
     				.concertDate(schedule.getConcertDate())
     				.totalSeats(schedule.getTotalSeats())
-    				.availableSeats(schedule.getAvailableSeats())
+    				.availableSeats(availableSeats)  // Redis에서 가져온 값
     				.build();
     }
 
