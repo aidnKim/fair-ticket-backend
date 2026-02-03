@@ -1,6 +1,7 @@
 package com.fairticket.domain.payment.service;
 
 import com.fairticket.domain.concert.model.Seat;
+import com.fairticket.domain.concert.service.SeatAvailabilityService;
 import com.fairticket.domain.payment.dto.PaymentCreateRequestDto;
 import com.fairticket.domain.payment.dto.PortOnePaymentResponseDto;
 import com.fairticket.domain.payment.model.Payment;
@@ -28,6 +29,7 @@ public class PaymentService {
     private final ReservationRepository reservationRepository;
     private final UserRepository userRepository;
     private final PortOneService portOneService;
+    private final SeatAvailabilityService seatAvailabilityService;
 
     //결제 처리
     @Transactional
@@ -173,5 +175,6 @@ public class PaymentService {
         
         // 5. 잔여 좌석 증가
         payment.getReservation().getSchedule().increaseAvailableSeats();
+        seatAvailabilityService.increaseSeats(payment.getReservation().getSchedule().getId());
     }
 }

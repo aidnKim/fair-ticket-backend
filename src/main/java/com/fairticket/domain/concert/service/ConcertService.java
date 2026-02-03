@@ -33,6 +33,7 @@ public class ConcertService {
     private final ConcertRepository concertRepository;
     private final ConcertScheduleRepository scheduleRepository;
     private final SeatRepository seatRepository;
+    private final SeatAvailabilityService seatAvailabilityService;
 
     // 1. 공연 생성
     @Transactional
@@ -60,7 +61,9 @@ public class ConcertService {
                 .totalSeats(requestDto.getTotalSeats())
                 .build();
         
+        // 스케줄 저장 후 Redis 초기화
         scheduleRepository.save(schedule);
+        seatAvailabilityService.initializeSeats(schedule.getId(), requestDto.getTotalSeats());
 
         // 좌석 자동 생성 로직
         Venue venue = concert.getVenue();
@@ -92,6 +95,7 @@ public class ConcertService {
     }
     
     // 3. 공연 목록 조회
+    @Cacheable(value = "concerts")
     @Transactional(readOnly = true)
     public List<ConcertResponseDto> getConcerts() {
         return concertRepository.findAll().stream()
@@ -109,11 +113,19 @@ public class ConcertService {
     }
     
     // 5. 특정 콘서트 세부 내용 조회
+    // 기본 정보만 캐시 (엔티티)
+    @Cacheable(value = "concertBasic", key = "#concertId")
+    @Transactional(readOnly = true)
+    public Concert getConcertBasic(Long concertId) {
+        return concertRepository.findById(concertId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 공연입니다."));
+    }
+
+    // 상세 조회 (캐시 X) - 캐시된 기본 정보 + 실시간 잔여석
     @Transactional(readOnly = true)
     public ConcertDetailResponseDto getConcertDetail(Long concertId) {
-        Concert concert = concertRepository.findById(concertId)
-                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 공연입니다."));
-        return new ConcertDetailResponseDto(concert);
+        Concert concert = getConcertBasic(concertId);  // 캐시에서
+        return new ConcertDetailResponseDto(concert, seatAvailabilityService);
     }
     
 }
