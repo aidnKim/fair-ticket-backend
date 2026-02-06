@@ -56,23 +56,25 @@ Docker Compose를 활용하여 Backend, Frontend, Redis, Certbot(SSL 인증서) 
 * **문제:** 프론트엔드에서 결제 성공 후 백엔드 검증 과정에서 실패할 경우, 사용자 브라우저 종료나 네트워크 끊김으로 **환불 요청이 누락**되어 돈만 빠져나가는 위험 존재.
 * **해결:** 검증과 취소의 책임을 **서버로 일원화**. `PaymentService`에서 검증 실패 감지 시 **즉시 포트원 API를 호출**하여 자동 환불 처리.
 * **결과:** 네트워크 불안정 상황에서도 **환불 누락 0%**, 통신 횟수 2회 → 1회로 단축, Fail-Safe 설계 적용.
-* 👉 [상세 과정 보기](./docs/troubleshooting-01-payment-verification.md)
+* 👉 [상세 과정 보기](https://hyeonsookim.tistory.com/4)
 
 ### 5. YAML 8진수 파싱으로 인한 포트원 API 인증 실패 해결
 * **문제:** 포트원 API Key를 application.yml에 설정했으나 **401 Unauthorized** 에러 지속. 하드코딩 시에만 정상 동작.
 * **해결:** `0`으로 시작하는 값이 **YAML 스펙에 의해 8진수로 자동 변환**되는 문제 발견. 따옴표(`"`)로 감싸 **문자열로 명시적 선언**.
 * **결과:** API Key가 정확히 로드되어 **포트원 인증 정상 동작**. API Key, 전화번호 등 0으로 시작하는 값 설정 시 주의사항 학습.
-* 👉 [상세 과정 보기](./docs/troubleshooting-02-yaml-parsing-issue.md)
+* 👉 [상세 과정 보기](https://hyeonsookim.tistory.com/5)
 
 ### 6. Redis 캐시 직렬화 오류 해결
 * **문제:** @Cacheable 적용 시 LocalDateTime 필드에서 SerializationException 발생
 * **해결:** RedisConfig에 JavaTimeModule 등록, GenericJackson2JsonRedisSerializer에 커스텀 ObjectMapper 적용
 * **결과:** DTO에 개별 어노테이션 없이 전역 설정으로 JSON 직렬화 정상 동작
+* 👉 [상세 과정 보기](https://hyeonsookim.tistory.com/6)
 
 ### 7. Redis 카운터 기반 실시간 잔여석 관리
 * **문제:** 캐시 적용 시 잔여석이 실시간 반영되지 않는 문제
 * **해결:** 캐시 대상(공연 정보)과 실시간 데이터(잔여석)를 분리, Redis Atomic Counter로 잔여석 관리
 * **결과:** 캐시 성능 유지하면서 잔여석 실시간 반영
+* 👉 [상세 과정 보기](https://hyeonsookim.tistory.com/7)
 
 ### 8. Redis 기반 대기열 시스템 구축
 * **문제:** 인기 공연 오픈 시 동시 접속 폭주로 서버 과부하 우려
