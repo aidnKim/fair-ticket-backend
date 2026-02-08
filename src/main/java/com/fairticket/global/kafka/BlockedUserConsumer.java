@@ -22,10 +22,10 @@ public class BlockedUserConsumer {
     
     @KafkaListener(topics = "blocked-users", groupId = "fraud-detection-group")
     public void handleBlockedUser(Map<String, Object> message) {
-        Long userId = (Long) message.get("userId");
-        String reason = (String) message.get("reason");
+    	String userIdentifier = (String) message.get("userId");  // email 또는 sessionId
+    	String reason = (String) message.get("reason");
         
-        log.info("User blocked: userId={}, reason={}", userId, reason);
+    	log.info("User blocked: userIdentifier={}, reason={}", userIdentifier, reason);
         
         // Redis에 차단 수 증가
         Long blockedCount = redisTemplate.opsForValue()
