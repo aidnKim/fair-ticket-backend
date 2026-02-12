@@ -23,12 +23,12 @@ public class WebMvcConfig implements WebMvcConfigurer {
         // 순서: 1차 차단 → 로깅
         registry.addInterceptor(rateLimitInterceptor)
             .addPathPatterns("/api/**")
-            .excludePathPatterns("/api/v1/queue/**", "/api/v1/users/**")
+            .excludePathPatterns("/api/v1/queue/**", "/api/v1/users/**", "/api/v1/admin/**")
             .order(1);
             
         registry.addInterceptor(suspiciousPatternInterceptor)
             .addPathPatterns("/api/**")
-            .excludePathPatterns("/api/v1/queue/**", "/api/v1/users/**")
+            .excludePathPatterns("/api/v1/queue/**", "/api/v1/users/**", "/api/v1/admin/**")
             .order(2);
             
         registry.addInterceptor(userActionInterceptor)

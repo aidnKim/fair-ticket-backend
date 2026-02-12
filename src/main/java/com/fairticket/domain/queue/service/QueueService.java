@@ -23,11 +23,24 @@ public class QueueService {
     
     // 대기열 등록
     public Long enterQueue(Long scheduleId, String email) {
+    	
+    	// 이전 active 상태 정리 (데모용)
+    	redissonClient.getSet(ACTIVE_SET_KEY + scheduleId).remove(email);
+    	
         String queueKey = WAITING_QUEUE_KEY + scheduleId;
         RScoredSortedSet<String> queue = redissonClient.getScoredSortedSet(queueKey);
         
         if (queue.contains(email)) {
             return getQueuePosition(scheduleId, email);
+        }
+        
+        // 대기열이 비어있으면 가짜 대기자 추가 (데모용)
+        if (queue.isEmpty()) {
+            long baseTime = System.currentTimeMillis() - 100000;
+            for (int i = 0; i < 50; i++) {
+                queue.add(baseTime + i, "fake_user_" + i + "@bot.com");
+            }
+            log.info("데모용 가짜 대기자 50명 추가됨");
         }
         
         queue.add(System.currentTimeMillis(), email);
