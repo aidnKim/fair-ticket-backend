@@ -32,8 +32,9 @@ public class WebMvcConfig implements WebMvcConfigurer {
             .order(2);
             
         registry.addInterceptor(userActionInterceptor)
-            .addPathPatterns("/api/**")
-            .excludePathPatterns("/api/v1/users/login", "/api/v1/users/signup")
-            .order(3);
+	        .addPathPatterns("/api/**")
+	        .excludePathPatterns("/api/v1/users/login", "/api/v1/users/signup", "/api/v1/admin/**")
+	        .order(3);
+
     }
 }
