@@ -29,6 +29,7 @@ public class QueueFilter implements Filter {
     private static final List<String> EXCLUDE_PATHS = List.of(
         "/api/v1/queue",      // 대기열 API 자체
         "/api/v1/users",       // 로그인/회원가입
+        "/api/v1/admin",
         "/ws",                // WebSocket
         "/swagger",           // Swagger
         "/h2-console"         // H2 콘솔

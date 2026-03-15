@@ -44,6 +44,8 @@ public class SecurityConfig {
                     .requestMatchers("/v3/api-docs/**", "/swagger-ui/**").permitAll()
                     // web socket 접근 허용 
                     .requestMatchers("/ws/**").permitAll()
+                    // 가짜 공격 요청 접근 허용 
+                    .requestMatchers("/api/v1/admin/**").permitAll()
                     // 추가: 공연 조회는 공개
                     .requestMatchers(HttpMethod.GET, "/api/v1/concerts/**").permitAll()
                     // 그 외의 모든 요청은 인증(토큰)이 있어야 함 (authenticated)
