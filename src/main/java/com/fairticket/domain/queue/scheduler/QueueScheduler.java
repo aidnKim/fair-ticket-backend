@@ -26,7 +26,7 @@ public class QueueScheduler {
         for (ConcertSchedule schedule : activeSchedules) {
             Long scheduleId = schedule.getId();
             if (queueService.getQueueSize(scheduleId) > 0) {
-                queueService.allowNextUsers(scheduleId, 10);
+                queueService.allowNextUsers(scheduleId, 50);
             }
         }
     }

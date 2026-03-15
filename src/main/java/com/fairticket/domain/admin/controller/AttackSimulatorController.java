@@ -3,6 +3,8 @@ package com.fairticket.domain.admin.controller;
 import java.time.LocalDateTime;
 import java.util.Map;
 
+import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 public class AttackSimulatorController {
 
     private final UserActionProducer userActionProducer;
+    private final RedisTemplate<String, Object> redisTemplate;
 
     @PostMapping("/simulate-attack")
     public Map<String, Object> simulateAttack() {
@@ -43,5 +46,12 @@ public class AttackSimulatorController {
                 "success", true,
                 "message", "25개 가짜 요청이 AI 서버로 전송됨",
                 "botId", fakeBotId);
+    }
+    
+    @GetMapping("/blocked-count")
+    public Map<String, Object> getBlockedCount() {
+        Object count = redisTemplate.opsForValue().get("blocked:macro:count");
+        Long blockedCount = count != null ? Long.parseLong(count.toString()) : 0L;
+        return Map.of("blockedCount", blockedCount);
     }
 }
