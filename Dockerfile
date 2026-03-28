@@ -17,4 +17,4 @@ WORKDIR /app
 # 1단계(builder)의 target 폴더에서 jar 파일을 가져옴
 COPY --from=builder /app/target/*.jar app.jar
 
-ENTRYPOINT ["java", "-jar", "-Duser.timezone=Asia/Seoul", "/app/app.jar"]
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -Duser.timezone=Asia/Seoul -jar /app/app.jar"]
