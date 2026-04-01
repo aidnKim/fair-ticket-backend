@@ -31,6 +31,12 @@ public class UserActionInterceptor implements HandlerInterceptor {
     @Override
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response,
                                 Object handler, Exception ex) {
+        // 대기열 순번 조회 등 단순 폴링은 AI 감시 대상에서 제외
+        String uri = request.getRequestURI();
+        if (uri.contains("/queue")) {
+            return;
+        }
+    	
         long startTime = (Long) request.getAttribute("startTime");
         long responseTime = System.currentTimeMillis() - startTime;
         

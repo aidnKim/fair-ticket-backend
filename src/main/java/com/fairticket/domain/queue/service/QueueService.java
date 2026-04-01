@@ -2,6 +2,7 @@ package com.fairticket.domain.queue.service;
 
 import java.time.LocalDateTime;
 import java.util.Map;
+import java.util.Set;
 
 import org.redisson.api.RScoredSortedSet;
 import org.redisson.api.RedissonClient;
@@ -48,26 +49,18 @@ public class QueueService {
             
             // 200개 슬롯 중 봇 30개를 랜덤 위치에 배치
             java.util.Set<Integer> botPositions = new java.util.HashSet<>();
-            java.util.Random random = new java.util.Random(42);
+            java.util.Random random = new java.util.Random();
             while (botPositions.size() < 30) {
                 botPositions.add(random.nextInt(200));
             }
-            
-            int botIndex = 0;
-            int userIndex = 0;
+
             for (int i = 0; i < 200; i++) {
-                if (botPositions.contains(i)) {
-                    queue.add(baseTime + i, "macro_" + botIndex + "@bot.com");
-                    botIndex++;
-                } else {
-                    queue.add(baseTime + i, "user_" + userIndex + "@queue.com");
-                    userIndex++;
-                }
+            	queue.add(baseTime + i, "user_" + i + "@queue.com");
             }
             
             log.info("데모용 대기자 200명 추가됨 (봇 30 + 정상 170, 섞어 배치)");
             
-            sendFakeTrafficToKafka(scheduleId);
+            sendFakeTrafficToKafka(scheduleId, botPositions);
         }
         
         queue.add(System.currentTimeMillis(), email);
@@ -102,12 +95,6 @@ public class QueueService {
             String email = queue.first();
             if (email == null) break;
             
-            // 봇이면 처리 중단 (AI가 제거할 때까지 대기)
-            if (email.endsWith("@bot.com")) {
-                log.info("봇 발견, 스케줄러 대기: {}", email);
-                break;
-            }
-            
             // 정상 사용자만 제거 & 입장 처리
             queue.pollFirst();
             redissonClient.getSet(activeKey).add(email);
@@ -138,18 +125,18 @@ public class QueueService {
         redissonClient.getSet(ACTIVE_SET_KEY + scheduleId).remove(email);
     }
     
-    private void sendFakeTrafficToKafka(Long scheduleId) {
+    private void sendFakeTrafficToKafka(Long scheduleId, Set<Integer> botPositions) {
         // 별도 스레드에서 시차를 두고 전송
         new Thread(() -> {
             try {
-                for (int i = 0; i < 30; i++) {
+                for (int pos : botPositions) {
                     // 각 봇당 25건씩 burst 전송
                     for (int j = 0; j < 25; j++) {
                         UserActionEvent event = UserActionEvent.builder()
-                            .userEmail("macro_" + i + "@bot.com")
+                        	.userEmail("user_" + pos + "@queue.com")
                             .sessionId(null)
                             .actionType("SEAT_VIEW")
-                            .ipAddress("10.0.1." + i)
+                            .ipAddress("10.0.1." + pos)
                             .userAgent("MacroBot/1.0")
                             .timestamp(LocalDateTime.now())
                             .endpoint("/api/v1/concerts/" + scheduleId + "/seats")
@@ -161,7 +148,9 @@ public class QueueService {
                 }
 
                 // 정상 사용자 170명 (AI가 통과시킴)
-                for (int i = 0; i < 170; i++) {
+                for (int i = 0; i < 200; i++) {
+                	if (botPositions.contains(i)) continue; // 봇 위치 건너뜀
+                	
                     UserActionEvent event = UserActionEvent.builder()
                         .userEmail("user_" + i + "@queue.com")
                         .sessionId("session_" + i)
@@ -183,11 +172,6 @@ public class QueueService {
 
 
     public void removeBlockedUser(String email) {
-    	// 실제 사용자는 제거하지 않음 (봇만 제거)
-        if (!email.endsWith("@bot.com")) {
-            log.info("실제 사용자 보호: {}", email);
-            return;
-        }
         
         // 모든 스케줄의 대기열에서 해당 사용자 제거
         // (간단하게 scheduleId 1~9 범위로)
