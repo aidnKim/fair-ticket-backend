@@ -8,6 +8,7 @@ import org.redisson.api.RScoredSortedSet;
 import org.redisson.api.RedissonClient;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 
 import com.fairticket.global.kafka.UserActionEvent;
 import com.fairticket.global.kafka.UserActionProducer;
@@ -23,7 +24,8 @@ public class QueueService {
     private final RedissonClient redissonClient;
     private final SimpMessagingTemplate messagingTemplate;
     private final UserActionProducer userActionProducer;
-    
+    private final RestTemplate restTemplate = new RestTemplate();
+
     private static final String WAITING_QUEUE_KEY = "waiting_queue:";
     private static final String ACTIVE_SET_KEY = "active_set:";
     
@@ -59,6 +61,13 @@ public class QueueService {
             }
             
             log.info("데모용 대기자 200명 추가됨 (봇 30 + 정상 170, 섞어 배치)");
+            
+            try {
+                restTemplate.postForObject("http://localhost:8000/reset", null, String.class);
+                log.info("AI 서버 상태 초기화 완료");
+            } catch (Exception e) {
+                log.warn("AI 서버 초기화 실패 (무시): {}", e.getMessage());
+            }
             
             sendFakeTrafficToKafka(scheduleId, botPositions);
         }
